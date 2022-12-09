@@ -1,26 +1,12 @@
-#include <iostream>
-#include <cstdlib>
-#include <cstring>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <poll.h>
-#include <vector>
-#include <signal.h>
-#include <fcntl.h>
+#ifndef IRC_SERVER_HPP
+# define IRC_SERVER_HPP
 
-class ClientIRC {
-    public:
-        ClientIRC(int);
-        ~ClientIRC();
-        int GetFd();
-        void SendMessage(const char *);
-        void ClientConnect();
-    
-    private:
-        int fd;
-};
+# include "Include.hpp"
+# include "ClientIRC.hpp"
+# include "ChannelIRC.hpp"
+# include "ChannelManager.hpp"
+
+class ChannelManager;
 
 class ServerIRC {
     public:
@@ -30,6 +16,7 @@ class ServerIRC {
         void Run();
         void Close();
         void MesssageReceived(ClientIRC *, std::string);
+        void ExecuteCommand(ClientIRC *, std::string);
         ClientIRC *CreateClient();
     
     private:
@@ -37,7 +24,9 @@ class ServerIRC {
         int sockfd;
         fd_set current_sockets;
         fd_set ready_sockets;
+        ChannelManager *channelManager;
 
         /*vector of client*/
         std::vector <ClientIRC *> Clients;
 };
+#endif
