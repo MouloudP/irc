@@ -23,6 +23,9 @@ class ChannelIRC {
         void RemoveClient(ClientIRC *);
         std::vector<ClientIRC *> GetClients();
 
+        bool HasClient(ClientIRC *);
+        void SendMessage(std::string, ClientIRC *);
+
         /*void SetMode(std::string);
         std::string GetMode();*/
 

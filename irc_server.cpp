@@ -205,15 +205,26 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
 
     std::vector<std::string> args = splitString(command, " ");
     std::cout << "COMMAND : " << args[0] << std::endl;
+
+    /*remove \r\n*/
+    if (args[args.size() - 1].find("\r") != std::string::npos) {
+        args[args.size() - 1].erase(args[args.size() - 1].find("\r"), 1);
+    }
+    if (args[args.size() - 1].find("\n") != std::string::npos) {
+        args[args.size() - 1].erase(args[args.size() - 1].find("\n"), 1);
+    }
+
     if (args[0] == "NICK") {
-        std::cout << "NICK" << std::endl;
-        client->SetNick(args[1]);
+        //std::cout << "NICK : " << args[1] << std::endl;
         if (args[1] == "_") {
             client->SendMessage(":mouloud 432 ahamdoun :Erroneous nickname\n");
         } else {
             //client->SendMessage(":mouloud 433 ahamdoun :ahamdoun is already in use\n");
             client->SetNick(args[1]);
         }
+        std::cout << "_________________________" << std::endl;
+        std::cout << client->GetNick() << std::endl;
+        std::cout << "_________________________" << std::endl;
 
         /*The nick is already take*/
         
@@ -256,6 +267,20 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
             }
             std::cout << "PART " << *it << std::endl;
             channel->RemoveClient(client);
+        }
+    } else if (args[0] == "PRIVMSG") {
+        std::string message = concatString(args, 2);
+        std::cout << "PRIVMSG " << args[1] << " : " << message << std::endl;
+        ChannelIRC *channel = this->channelManager->GetChannel(args[1]);
+        if (channel) {
+            std::cout << "Channel " << args[1] << " found send message " << message << std::endl;
+            if (channel->HasClient(client))
+                channel->SendMessage(":" + client->GetUserName() + " PRIVMSG " + args[1] + " " + message + "\r\n", client);
+            else
+                client->SendMessage(":mouloud 404 " + client->GetUserName() + " " + args[1] + " :You are not in the chanel\r\n");
+        } else {
+            std::cout << "Channel " << args[1] << " not found" << std::endl;
+            client->SendMessage(":mouloud 403 ahamdoun " + args[1] + " :No such channel\r\n");
         }
     }
 }

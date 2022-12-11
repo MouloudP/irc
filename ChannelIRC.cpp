@@ -22,13 +22,22 @@ std::string ChannelIRC::GetTopic() {
 
 void ChannelIRC::AddClient(ClientIRC *client) {
     clients.push_back(client);
+
+    std::cout << "_________________________" << std::endl;
+    std::cout << client->GetNick() << std::endl;
+    std::cout << "_________________________" << std::endl;
+
+    std::cout << client->GetNick() << " JOIN " << name << std::endl;
+    this->SendMessage(":" + client->GetUserName() + "!127.0.0.1 " + " JOIN " + name + "\r\n", client);
+    client->SendMessage(":mouloud 353 " + client->GetNick() + " = " + name + " :" + client->GetNick() + "\r\n");
+    client->SendMessage(":mouloud 366 " + client->GetNick() + " " + name + " :End of /NAMES list.\r\n");
 }
 
 void ChannelIRC::RemoveClient(ClientIRC *client) {
     for (std::vector<ClientIRC *>::iterator it = clients.begin(); it != clients.end(); it++) {
         if (*it == client) {
             std::cout << "REMOVE CLIENT FROM CHANNEL" << std::endl;
-            (*it)->SendMessage("PART " + name + "\r\n");
+            //(*it)->SendMessage(":" + client->GetUserName() + "!127.0.0.1 " + " PART " + name + " leave chanel\r\n");
             clients.erase(it);
             break;
         }
@@ -36,52 +45,27 @@ void ChannelIRC::RemoveClient(ClientIRC *client) {
     if (clients.size() == 0) {
         std::cout << "DELETE CHANNEL" << std::endl;
         channelManager->DeleteChannel(this);
+    } else {
+        this->SendMessage(":" + client->GetUserName() + "!0 " + " PART " + name + " leave chanel\r\n", NULL);
+    }
+}
+
+bool ChannelIRC::HasClient(ClientIRC *client) {
+    for (std::vector<ClientIRC *>::iterator it = clients.begin(); it != clients.end(); it++) {
+        if (*it == client) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void ChannelIRC::SendMessage(std::string message, ClientIRC *client) {
+    for (std::vector<ClientIRC *>::iterator it = clients.begin(); it != clients.end(); it++) {
+        if (*it == client) continue;
+        (*it)->SendMessage(message);
     }
 }
 
 std::vector<ClientIRC *> ChannelIRC::GetClients() {
     return clients;
 }
-
-ChannelManager::ChannelManager() {}
-ChannelManager::~ChannelManager() {}
-
-ChannelIRC *ChannelManager::CreateChannel(std::string name, ClientIRC *client) {
-    ChannelIRC *channel = new ChannelIRC(name, this);
-    channels[name] = channel;
-
-    channel->AddClient(client);
-    client->SendMessage(":mouloud 331 " + client->GetNick() + " " + name + " :No topic is set\r\n");
-    return channel;
-}
-
-ChannelIRC *ChannelManager::GetChannel(std::string name) {
-    return channels[name];
-}
-
-void ChannelManager::DeleteChannel(std::string name) {
-    delete channels[name];
-    channels.erase(name);
-}
-
-void ChannelManager::DeleteChannel(ChannelIRC *channel) {
-    for (std::map<std::string, ChannelIRC *>::iterator it = channels.begin(); it != channels.end(); it++) {
-        if (it->second == channel) {
-            channels.erase(it);
-            break;
-        }
-    }
-    delete channel;
-}
-
-void ChannelManager::DeleteAllChannels() {
-    for (std::map<std::string, ChannelIRC *>::iterator it = channels.begin(); it != channels.end(); it++) {
-        delete it->second;
-    }
-    channels.clear();
-}
-
-std::map<std::string, ChannelIRC *> ChannelManager::GetChannels() {
-    return channels;
-}
-
