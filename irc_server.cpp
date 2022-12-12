@@ -32,30 +32,14 @@ ServerIRC::ServerIRC(int port): port(port) {
         perror("listen");
         exit(1);
     }
+
+    channelManager = new ChannelManager();
 }
 
 ServerIRC::~ServerIRC() {
     close(sockfd);
 
     std::cout << "ServerIRC::~ServerIRC()" << std::endl;
-}
-
-ClientIRC::ClientIRC(int fd): fd(fd) {
-    std::cout << "ClientIRC::ClientIRC(int)" << std::endl;
-}
-
-ClientIRC::~ClientIRC() {
-    close(fd);
-
-    std::cout << "ClientIRC::~ClientIRC()" << std::endl;
-}
-
-int ClientIRC::GetFd() {
-    return fd;
-}
-
-void ClientIRC::SendMessage(const char *message) {
-    send(fd, message, strlen(message), 0);
 }
 
 ClientIRC *ServerIRC::CreateClient() {
@@ -74,9 +58,9 @@ ClientIRC *ServerIRC::CreateClient() {
     ClientIRC *client_irc = new ClientIRC(clientfd);
     Clients.push_back(client_irc);
 
-    for (auto it = Clients.begin(); it != Clients.end(); ++it) {
+    /*for (auto it = Clients.begin(); it != Clients.end(); ++it) {
         std::cout << (*it)->GetFd() << std::endl;
-    }
+    }*/
 
     //std::cout << Clients.size() << std::endl;
 
@@ -105,12 +89,8 @@ void ServerIRC::Run() {
             exit(1);
         }
 
-        //if (FD_SETSIZE > 0)
-            //std::cout << "FD_SETSIZE" << FD_SETSIZE << std::endl;
-
         for (int i = 0; i < FD_SETSIZE; i++) {
             if (FD_ISSET(i, &ready_sockets)) {
-                std::cout << "i = " << i << std::endl;
                 if (i == sockfd) {
                     ClientIRC *test = this->CreateClient();
                 } else {
@@ -123,10 +103,6 @@ void ServerIRC::Run() {
         for (auto it = Clients.begin(); it != Clients.end(); ++it) {
            //Non blocking socket
 
-            //std::cout << "START READ MESSAGE" << (*it)->GetFd() << std::endl;
-            //char request[1024];
-            //int bytes_received = recv((*it)->GetFd(), request, sizeof(request), 0);
-
             std::string request = "";
             std::string dataRead = "";
             char buffer[1024];
@@ -136,42 +112,13 @@ void ServerIRC::Run() {
                 buffer[lenght] = '\0';
                 //std::cout << "\\BUFFER = " << buffer << std::endl;
                 fflush(stdout);
-            }
-
-            while (request.empty() && (lenght) > 0) {
-                dataRead += buffer;
-                request = dataRead;
+                request = buffer;
             }
             if (!request.empty()) {
-                //std::cout << "---------------------------" << std::endl;
-                //std::cout << "[" << (*it)->GetFd() << "]" << request << std::endl;
-                //std::cout << "---------------------------" << std::endl;
-                if (request.find("USER") != std::string::npos) {
-                    std::cout << "USER CONNECTED !!!!" << std::endl;
-                    (*it)->SendMessage(":mouloud 001 ahamdoun :Welcome to the Internet Relay Network\n");
-                }
+
                 MesssageReceived((*it), request);
             }
             buffer[0] = '\0';
-            // print the request to the console
-            //std::cout << "[" << (*it)->GetFd() << "]" << request << std::endl;
-
-            /*Split by space*/
-            //char *token = strtok(request, " ");
-            //std::string command = token;
-            /*std::string *arg = new std::string[10];
-            for (int i = 1; token[i] != NULL; i++) {
-                arg[i] = token[i];
-            }*/
-            /*if (command == "JOIN") {
-                std::cout << "JOIN" << std::endl;
-            }
-            if (command == "NICK" || command == "CAP") {
-                (*it)->SendMessage(":mouloud 001 ahamdoun :Welcome to the Internet Relay Network\n");
-                std::cout << "send 001" << std::endl;
-            }*/
-
-            //std::cout << "END READ MESSAGE" << (*it)->GetFd() << std::endl;
         }
     }
 }
@@ -184,10 +131,198 @@ void ServerIRC::Close() {
     }
 }
 
+std::vector<std::string> splitString(std::string str, std::string delimiter) {
+    std::vector<std::string> result;
+    size_t pos = 0;
+    std::string token;
+    while ((pos = str.find(delimiter)) != std::string::npos) {
+        token = str.substr(0, pos);
+        result.push_back(token);
+        str.erase(0, pos + delimiter.length());
+    }
+    if (!str.empty()) {
+        result.push_back(str);
+    }
+    return result;
+}
+
+std::string concatString(std::vector<std::string> str, int start) {
+    std::string result = "";
+    for (int i = start; i < str.size(); i++) {
+        result += str[i];
+        if (i != str.size() - 1) {
+            result += " ";
+        }
+    }
+    return result;
+}
 
 void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {
-    std::cout << "RECEIVE FROM [" << client->GetFd() << "] : " << message << std::endl;
-    if (message == "LEAVE") {
-        client->SendMessage("LEAVE");
+    //std::cout << "RECEIVE FROM [" << client->GetFd() << "] : " << message << std::endl;
+
+    std::vector<std::string> messages = splitString(message, "\n");
+    for (auto it = messages.begin(); it != messages.end(); ++it) {
+        this->ExecuteCommand(client, *it);
     }
 }
+
+void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
+    std::cout << "MESSAGE RECEIVED : " << command << std::endl;
+
+    std::vector<std::string> args = splitString(command, " ");
+    std::cout << "COMMAND : " << args[0] << std::endl;
+
+    /*remove \r\n*/
+    if (args[args.size() - 1].find("\r") != std::string::npos) {
+        args[args.size() - 1].erase(args[args.size() - 1].find("\r"), 1);
+    }
+    if (args[args.size() - 1].find("\n") != std::string::npos) {
+        args[args.size() - 1].erase(args[args.size() - 1].find("\n"), 1);
+    }
+    if (args[0] == "PASS")
+    {
+        if (args[1].empty())
+              client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
+        if(!client->GetRegistered())
+            client->SendMessage(":mouloud 462" + client->GetUserName()  + ":You're already register \n");
+
+    }
+    else if (args[0] == "NICK") {
+
+        if (args[1].empty())
+            client->SendMessage(":mouloud 431" + client->GetUserName() + ":	Returned when a nickname parameter expected for a command isn't found");
+        if (args[1] == "_") {
+            client->SendMessage(":mouloud 432 ahamdoun :Erroneous nickname\n");
+        //client->SendMessage(":mouloud 433 ahamdoun :ahamdoun is already in use\n");
+        client->SetNick(args[1]);
+        std::cout << "_________________________" << std::endl;
+        std::cout << client->GetNick() << std::endl;
+        std::cout << "_________________________" << std::endl;
+
+        /*The nick is already take*/
+        
+    } else if (args[0] == "USER") {
+        std::cout << "USER" << std::endl;
+        if (args.size() - 1 < 4) {
+            client->SendMessage(":mouloud 461 ahamdoun USER :Not enough parameters\n");
+            return;
+        }
+        if (client->GetRegistered()) {
+            client->SendMessage(":mouloud 462 ahamdoun :You may not reregister\n");
+            return;
+        }
+        std::string RealName = concatString(args, 4).erase(0, 1);
+        std::cout << "RealName : " << RealName << std::endl;
+        client->SetUserName(args[1]);
+        client->SetRealName(RealName);
+        client->SetRegistered(true);
+        client->SendMessage(":mouloud 001 ahamdoun :Welcome to the Internet Relay Network\n");
+    } else if (args[0] == "PING") {
+        std::string concat = "PONG " + concatString(args, 1) + "\r\n";
+        client->SendMessage(concat);
+        std::cout << concat << std::endl;
+    } else if (args[0] == "JOIN") {
+
+        if (args[1].empty())
+              client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
+
+        ChannelIRC *channel = this->channelManager->GetChannel(args[1]);
+        if (channel) {
+            channel->AddClient(client);
+        } else {
+            this->channelManager->CreateChannel(args[1], client);
+            //std::cout << "Channel " << args[1] << " created" << std::endl;
+        }
+    } else if (args[0] == "PART") {
+         if (args[1].empty())
+              client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
+        std::vector<std::string> channels = splitString(args[1], ",");
+        for (auto it = channels.begin(); it != channels.end(); ++it) {
+            ChannelIRC *channel = this->channelManager->GetChannel(*it);
+            if (!channel) {
+                std::cout << "Channel " << *it << " not found" << std::endl;
+                client->SendMessage(":mouloud 403 ahamdoun " + *it + " :No such channel\r\n");
+                continue;
+            }
+            else if (!channel->HasClient(client))
+                 client->SendMessage(":mouloud 442" + client->GetUserName() + " " + channel->GetName() + " :You're not a member of the channel\r\n");
+            else
+                /* sinon remove le client du channel */
+            std::cout << "PART " << *it << std::endl;
+            channel->RemoveClient(client);
+        }
+    } else if (args[0] == "PRIVMSG") {
+        std::string message = concatString(args, 2);
+        std::cout << "PRIVMSG " << args[1] << " : " << message << std::endl;
+        ChannelIRC *channel = this->channelManager->GetChannel(args[1]);
+        if (channel) {
+            std::cout << "Channel " << args[1] << " found send message " << message << std::endl;
+            if (channel->HasClient(client))
+                channel->SendMessage(":" + client->GetUserName() + " PRIVMSG " + args[1] + " " + message + "\r\n", client);
+            else
+                client->SendMessage(":mouloud 404 " + client->GetUserName() + " " + args[1] + " :You are not in the chanel\r\n");
+        } else {
+            std::cout << "Channel " << args[1] << " not found" << std::endl;
+            client->SendMessage(":mouloud 403 ahamdoun " + args[1] + " :No such channel\r\n");
+        }
+    } else if (args[0] == "LIST"){
+
+        client->SendMessage(":mouloud 321 " + client->GetUserName() + " :Channel :Users Name\r\n" );
+        std::map<std::string, ChannelIRC *> chan = channelManager->GetChannels();
+        if (args[1].empty())
+        {
+            std::stringstream ss;
+            std::string count;
+            for (auto it = chan.begin();it != chan.end();it++)
+            {
+
+                ChannelIRC *channel = this->channelManager->GetChannel(it->first);
+                ss << channel->getClientsCount();
+                ss >> count;
+                ss.clear();
+                std::cout << "count == " << count << std::endl;
+                client->SendMessage(": mouloud 322 " + client->GetUserName() + " "  + channel->GetName() +
+                 " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
+                std::cout << "CHANNEL |" << it->first << "|" << std::endl;
+            }
+        }
+        else
+        {
+        
+            for (auto ite = args.begin();ite != args.end();ite++)
+            {
+                std::stringstream ss;
+                std::string count;
+                for (auto it = chan.begin();it != chan.end();it++)
+                {
+                    ChannelIRC *channel = this->channelManager->GetChannel(it->first);
+                    ss << channel->getClientsCount();
+                    ss >> count;
+                    ss.clear();
+                    std::string name = *ite;
+                    std::string comp = it->first;
+                    name = "#"+name;
+                    if (comp == name)
+                    {
+                        client->SendMessage(": mouloud 322 " + client->GetUserName() + " "  + channel->GetName() +
+                        " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
+                        std::cout <<  "name == " << comp<< std::endl;
+                    }
+                }
+            }
+        }
+        client->SendMessage(": mouloud 323 " + client->GetUserName() + " :End of /LIST\r\n");
+    }else if (args[0] == "TOPIC")
+    {
+        ChannelIRC *chan; 
+         if (args[1].empty())
+            client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
+        if(!chan->HasClient(client))// a verifier
+            client->SendMessage(":mouloud 404 " + client->GetUserName() + " " + args[1] + " :You're not in the channel\r\n");
+
+    }else if (args[0] == "QUIT")
+    {
+
+    }
+ }         
+    
