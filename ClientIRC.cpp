@@ -1,52 +1,52 @@
 #include "ClientIRC.hpp"
 
-ClientIRC::ClientIRC(int fd): fd(fd), registered(false) {
+ClientIRC::ClientIRC(int fd): _fd(fd), _registered(false) {
     std::cout << "ClientIRC::ClientIRC(int)" << std::endl;
 }
 
 ClientIRC::~ClientIRC() {
-    close(fd);
+    close(_fd);
 
     std::cout << "ClientIRC::~ClientIRC()" << std::endl;
 }
 
 int ClientIRC::GetFd() {
-    return fd;
+    return _fd;
 }
 
 void ClientIRC::SendMessage(const std::string msg) {
     const char *message = msg.c_str();
-    send(fd, message, strlen(message), 0);
+    send(_fd, message, strlen(message), 0);
 }
 
 void ClientIRC::SetNick(std::string nick) {
-    nickname = nick;
+    _nickname = nick;
 }
 
 std::string ClientIRC::GetNick() {
-    return nickname;
+    return _nickname;
 }
 
 void ClientIRC::SetUserName(std::string username) {
-    this->username = username;
+    this->_username = username;
 }
 
 std::string ClientIRC::GetUserName() {
-    return username;
+    return _username;
 }
 
 void ClientIRC::SetRealName(std::string realname) {
-    this->realname = realname;
+    this->_realname = realname;
 }
 
 std::string ClientIRC::GetRealName() {
-    return realname;
+    return _realname;
 }
 
 void ClientIRC::SetRegistered(bool registered) {
-    this->registered = registered;
+    this->_registered = registered;
 }
 
 bool ClientIRC::GetRegistered() {
-    return registered;
+    return _registered;
 }

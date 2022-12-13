@@ -5,7 +5,7 @@ ChannelManager::~ChannelManager() {}
 
 ChannelIRC *ChannelManager::CreateChannel(std::string name, ClientIRC *client) {
     ChannelIRC *channel = new ChannelIRC(name, this);
-    channels[name] = channel;
+    _channels[name] = channel;
     
     std::cout << "CREATE CHANNEL |" << name << "|" << std::endl;
     channel->AddClient(client);
@@ -16,21 +16,21 @@ ChannelIRC *ChannelManager::CreateChannel(std::string name, ClientIRC *client) {
 ChannelIRC *ChannelManager::GetChannel(std::string name) {
     std::cout << "I WANT THE CHANNELLLLLL |" << name << "|" << std::endl;
 
-    for (std::map<std::string, ChannelIRC *>::iterator it = channels.begin(); it != channels.end(); it++)
+    for (std::map<std::string, ChannelIRC *>::iterator it = _channels.begin(); it != _channels.end(); it++)
         std::cout << "CHANNEL |" << it->first << "|" << std::endl;
 
-    return channels[name];
+    return _channels[name];
 }
 
 void ChannelManager::DeleteChannel(std::string name) {
-    delete channels[name];
-    channels.erase(name);
+    delete _channels[name];
+    _channels.erase(name);
 }
 
 void ChannelManager::DeleteChannel(ChannelIRC *channel) {
-    for (std::map<std::string, ChannelIRC *>::iterator it = channels.begin(); it != channels.end(); it++) {
+    for (std::map<std::string, ChannelIRC *>::iterator it = _channels.begin(); it != _channels.end(); it++) {
         if (it->second == channel) {
-            channels.erase(it);
+            _channels.erase(it);
             break;
         }
     }
@@ -38,13 +38,13 @@ void ChannelManager::DeleteChannel(ChannelIRC *channel) {
 }
 
 void ChannelManager::DeleteAllChannels() {
-    for (std::map<std::string, ChannelIRC *>::iterator it = channels.begin(); it != channels.end(); it++) {
+    for (std::map<std::string, ChannelIRC *>::iterator it = _channels.begin(); it != _channels.end(); it++) {
         delete it->second;
     }
-    channels.clear();
+    _channels.clear();
 }
 
 std::map<std::string, ChannelIRC *> ChannelManager::GetChannels() {
-    return channels;
+    return _channels;
 }
 

@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     //signal(SIGINT, signalKill);
-    ServerIRC server(atoi(argv[1]));
+    ServerIRC server(atoi(argv[1]), argv[2]);
     server.Run();
     
 

@@ -23,10 +23,10 @@ class ClientIRC {
         bool GetRegistered();
     
     private:
-        int fd;
-        std::string nickname;
-        std::string username;
-        std::string realname;
-        bool registered;
+        int _fd;
+        std::string _nickname;
+        std::string _username;
+        std::string _realname;
+        bool _registered;
 };
 #endif

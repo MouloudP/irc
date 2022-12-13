@@ -4,18 +4,18 @@ ServerIRC::ServerIRC() {
     std::cout << "ServerIRC::ServerIRC()" << std::endl;
 }
 
-ServerIRC::ServerIRC(int port): port(port) {
+ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
     std::cout << "ServerIRC::ServerIRC(int)" << std::endl;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
+    _sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (_sockfd == -1) {
         perror("socket");
         exit(1);
     }
 
     int yes = 1;
 
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
+    if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
         perror("setsockopt(SO_REUSEADDR) failed");
 
     struct sockaddr_in server;
@@ -23,40 +23,43 @@ ServerIRC::ServerIRC(int port): port(port) {
     server.sin_port = htons(port);
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) == -1) {
+    if (bind(_sockfd, (struct sockaddr *)&server, sizeof(server)) == -1) {
         perror("bind");
         exit(1);
     }
 
-    if (listen(sockfd, 10) == -1) {
+    if (listen(_sockfd, 10) == -1) {
         perror("listen");
         exit(1);
     }
 
-    channelManager = new ChannelManager();
+    _channelManager = new ChannelManager();
 }
 
 ServerIRC::~ServerIRC() {
-    close(sockfd);
+    close(_sockfd);
 
     std::cout << "ServerIRC::~ServerIRC()" << std::endl;
 }
 
+int				ServerIRC::getPort(void) const {return (_port);}
+std::string					ServerIRC::getPassword(void) const {return (_password);}
+
 ClientIRC *ServerIRC::CreateClient() {
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
-    std::cout << sockfd << std::endl;
-    int clientfd = accept(sockfd, (struct sockaddr *)&client, &client_len);
+    std::cout << _sockfd << std::endl;
+    int clientfd = accept(_sockfd, (struct sockaddr *)&client, &client_len);
 
     if (clientfd == -1) {
         perror("accept");
         exit(1);
     }
 
-    FD_SET(clientfd, &current_sockets);
+    FD_SET(clientfd, &_currentSockets);
 
     ClientIRC *client_irc = new ClientIRC(clientfd);
-    Clients.push_back(client_irc);
+    _clients.push_back(client_irc);
 
     /*for (auto it = Clients.begin(); it != Clients.end(); ++it) {
         std::cout << (*it)->GetFd() << std::endl;
@@ -75,32 +78,31 @@ ClientIRC *ServerIRC::CreateClient() {
 }
 
 void ServerIRC::Run() {
-    FD_ZERO(&current_sockets);
-    FD_SET(sockfd, &current_sockets);
+    FD_ZERO(&_currentSockets);
+    FD_SET(_sockfd, &_currentSockets);
 
     struct timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
 
     while (true) {
-        ready_sockets = current_sockets;
-        if (select(FD_SETSIZE, &ready_sockets, NULL, NULL, &timeout) < 0) {
+        _readySockets = _currentSockets;
+        if (select(FD_SETSIZE, &_readySockets, NULL, NULL, &timeout) < 0) {
             perror("select");
             exit(1);
         }
 
         for (int i = 0; i < FD_SETSIZE; i++) {
-            if (FD_ISSET(i, &ready_sockets)) {
-                if (i == sockfd) {
-                    ClientIRC *test = this->CreateClient();
+            if (FD_ISSET(i, &_readySockets)) {
+                if (i == _sockfd) 
                 } else {
-                    FD_CLR(i, &current_sockets);
+                    FD_CLR(i, &_currentSockets);
                 }
             }
         }
 
         // Iteration on Clients
-        for (auto it = Clients.begin(); it != Clients.end(); ++it) {
+        for (auto it = _clients.begin(); it != _clients.end(); ++it) {
            //Non blocking socket
 
             std::string request = "";
@@ -124,8 +126,8 @@ void ServerIRC::Run() {
 }
 
 void ServerIRC::Close() {
-    close(sockfd);
-    for (auto it = Clients.begin(); it != Clients.end(); ++it) {
+    close(_sockfd);
+    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
         close((*it)->GetFd());
         delete *it;
     }
@@ -179,18 +181,23 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
     if (args[args.size() - 1].find("\n") != std::string::npos) {
         args[args.size() - 1].erase(args[args.size() - 1].find("\n"), 1);
     }
-    if (args[0] == "PASS")
+    std::cout << "ARGS1 === " << args[1] << "  PASS === " << _password << std::endl; 
+     if (args[0] == "PASS")
     {
         if (args[1].empty())
               client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
         if(!client->GetRegistered())
             client->SendMessage(":mouloud 462" + client->GetUserName()  + ":You're already register \n");
+        if (args[1] == _password)
+        {
+            std::cout << "WELCOME TO THE HOOD IRC "<< std::endl;
+        }
 
-    }
-    else if (args[0] == "NICK") {
+    } 
+   else if (args[0] == "NICK") {
 
-        if (args[1].empty())
-            client->SendMessage(":mouloud 431" + client->GetUserName() + ":	Returned when a nickname parameter expected for a command isn't found");
+         if (args[1].empty())
+            client->SendMessage(":mouloud 431" + client->GetUserName() + ":	Returned when a nickname parameter expected for a command isn't found"); 
         if (args[1] == "_") {
             client->SendMessage(":mouloud 432 ahamdoun :Erroneous nickname\n");
         //client->SendMessage(":mouloud 433 ahamdoun :ahamdoun is already in use\n");
@@ -200,7 +207,7 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
         std::cout << "_________________________" << std::endl;
 
         /*The nick is already take*/
-        
+        }
     } else if (args[0] == "USER") {
         std::cout << "USER" << std::endl;
         if (args.size() - 1 < 4) {
@@ -223,22 +230,22 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
         std::cout << concat << std::endl;
     } else if (args[0] == "JOIN") {
 
-        if (args[1].empty())
+         if (args[1].empty())
               client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
-
-        ChannelIRC *channel = this->channelManager->GetChannel(args[1]);
+ 
+        ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
         if (channel) {
             channel->AddClient(client);
         } else {
-            this->channelManager->CreateChannel(args[1], client);
+            this->_channelManager->CreateChannel(args[1], client);
             //std::cout << "Channel " << args[1] << " created" << std::endl;
         }
     } else if (args[0] == "PART") {
-         if (args[1].empty())
-              client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
+          if (args[1].empty())
+              client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n"); 
         std::vector<std::string> channels = splitString(args[1], ",");
         for (auto it = channels.begin(); it != channels.end(); ++it) {
-            ChannelIRC *channel = this->channelManager->GetChannel(*it);
+            ChannelIRC *channel = this->_channelManager->GetChannel(*it);
             if (!channel) {
                 std::cout << "Channel " << *it << " not found" << std::endl;
                 client->SendMessage(":mouloud 403 ahamdoun " + *it + " :No such channel\r\n");
@@ -254,7 +261,7 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
     } else if (args[0] == "PRIVMSG") {
         std::string message = concatString(args, 2);
         std::cout << "PRIVMSG " << args[1] << " : " << message << std::endl;
-        ChannelIRC *channel = this->channelManager->GetChannel(args[1]);
+        ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
         if (channel) {
             std::cout << "Channel " << args[1] << " found send message " << message << std::endl;
             if (channel->HasClient(client))
@@ -265,10 +272,10 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
             std::cout << "Channel " << args[1] << " not found" << std::endl;
             client->SendMessage(":mouloud 403 ahamdoun " + args[1] + " :No such channel\r\n");
         }
-    } else if (args[0] == "LIST"){
+    }  else if (args[0] == "LIST"){
 
         client->SendMessage(":mouloud 321 " + client->GetUserName() + " :Channel :Users Name\r\n" );
-        std::map<std::string, ChannelIRC *> chan = channelManager->GetChannels();
+        std::map<std::string, ChannelIRC *> chan = _channelManager->GetChannels();
         if (args[1].empty())
         {
             std::stringstream ss;
@@ -276,7 +283,7 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
             for (auto it = chan.begin();it != chan.end();it++)
             {
 
-                ChannelIRC *channel = this->channelManager->GetChannel(it->first);
+                ChannelIRC *channel = this->_channelManager->GetChannel(it->first);
                 ss << channel->getClientsCount();
                 ss >> count;
                 ss.clear();
@@ -295,7 +302,7 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
                 std::string count;
                 for (auto it = chan.begin();it != chan.end();it++)
                 {
-                    ChannelIRC *channel = this->channelManager->GetChannel(it->first);
+                    ChannelIRC *channel = this->_channelManager->GetChannel(it->first);
                     ss << channel->getClientsCount();
                     ss >> count;
                     ss.clear();
@@ -323,6 +330,5 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
     }else if (args[0] == "QUIT")
     {
 
-    }
- }         
-    
+    } 
+ }        

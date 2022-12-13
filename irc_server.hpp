@@ -12,8 +12,12 @@ class ChannelManager;
 class ServerIRC {
     public:
         ServerIRC();
-        ServerIRC(int);
+        ServerIRC(int, std::string);
         ~ServerIRC();
+
+
+        int				getPort(void) const;
+		std::string		getPassword(void) const;
         void Run();
         void Close();
         void MesssageReceived(ClientIRC *, std::string);
@@ -21,13 +25,14 @@ class ServerIRC {
         ClientIRC *CreateClient();
     
     private:
-        int port;
-        int sockfd;
-        fd_set current_sockets;
-        fd_set ready_sockets;
-        ChannelManager *channelManager;
+        int _port;
+        int _sockfd;
+        fd_set _currentSockets;
+        std::string _password;
+        fd_set _readySockets;
+        ChannelManager *_channelManager;
         
         /*vector of client*/
-        std::vector <ClientIRC *> Clients;
+        std::vector <ClientIRC *> _clients;
 };
 #endif
