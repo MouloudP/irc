@@ -5,14 +5,17 @@
 # include "ClientIRC.hpp"
 # include "ChannelManager.hpp"
 
-class ServerIRC;
 class ChannelManager;
 class ClientIRC;
+class ServerIRC;
+class ChannelIRC;
 
 class CommandManager {
     public:
-        CommandManager(ChannelManager *);
+        CommandManager(ChannelManager *, ServerIRC *srv);
         ~CommandManager();
+
+
 
         void ExecuteCommand(ClientIRC *, std::string);
         void Nick(ClientIRC *, std::vector<std::string>);
@@ -24,6 +27,8 @@ class CommandManager {
         void List(ClientIRC *, std::vector<std::string>);
         void Topic(ClientIRC *, std::vector<std::string>);
         void Pass(ClientIRC *client, std::vector<std::string> args);
+        void Names(ClientIRC *client, std::vector<std::string> args);
+
     private:
         ChannelManager *_channelManager;
         ServerIRC *_server;

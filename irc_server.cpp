@@ -38,7 +38,7 @@ ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
     }
 
     _channelManager = new ChannelManager();
-    _commandManager = new CommandManager(_channelManager);
+    _commandManager = new CommandManager(_channelManager, this);
 }
 
 ServerIRC::~ServerIRC() {
@@ -144,6 +144,7 @@ void ServerIRC::Close() {
 void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {
     //std::cout << "RECEIVE FROM [" << client->GetFd() << "] : " << message << std::endl;
 
+    std::cout << "fd  server ==== " << client->GetFd() << std::endl;
     std::vector<std::string> messages = splitString(message, "\n");
     for (auto it = messages.begin(); it != messages.end(); ++it) {
         this->_commandManager->ExecuteCommand(client, *it);
