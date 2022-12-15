@@ -20,7 +20,8 @@ class CommandManager {
         void Join(ClientIRC *, std::vector<std::string>);
         void Part(ClientIRC *, std::vector<std::string>);
         void PrivMSG(ClientIRC *, std::vector<std::string>);
-
+        void List(ClientIRC *, std::vector<std::string>);
+        void Topic(ClientIRC *, std::vector<std::string>);
     private:
         ChannelManager *_channelManager;
 };

@@ -1,6 +1,6 @@
 #include "ChannelIRC.hpp"
 
-ChannelIRC::ChannelIRC(std::string name, ChannelManager *channelManager): _name(name), channelManager(channelManager) {}
+ChannelIRC::ChannelIRC(std::string name, ChannelManager *_channelManager): _name(name), _channelManager(_channelManager) {}
 
 ChannelIRC::~ChannelIRC() {}
 
