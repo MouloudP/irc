@@ -5,8 +5,10 @@
 # include "ClientIRC.hpp"
 # include "ChannelIRC.hpp"
 # include "ChannelManager.hpp"
+# include "CommandManager.hpp"
 
 class ChannelManager;
+class CommandManager;
 
 class ServerIRC {
     public:
@@ -25,6 +27,7 @@ class ServerIRC {
         fd_set current_sockets;
         fd_set ready_sockets;
         ChannelManager *channelManager;
+        CommandManager *commandManager;
 
         /*vector of client*/
         std::vector <ClientIRC *> Clients;

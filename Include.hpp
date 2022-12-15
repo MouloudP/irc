@@ -12,4 +12,6 @@
 # include <map>
 # include <signal.h>
 # include <fcntl.h>
+
+std::vector<std::string> splitString(std::string str, std::string delimiter);
 #endif
