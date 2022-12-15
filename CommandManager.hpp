@@ -5,6 +5,7 @@
 # include "ClientIRC.hpp"
 # include "ChannelManager.hpp"
 
+class ServerIRC;
 class ChannelManager;
 class ClientIRC;
 
@@ -22,8 +23,10 @@ class CommandManager {
         void PrivMSG(ClientIRC *, std::vector<std::string>);
         void List(ClientIRC *, std::vector<std::string>);
         void Topic(ClientIRC *, std::vector<std::string>);
+        void Pass(ClientIRC *client, std::vector<std::string> args);
     private:
         ChannelManager *_channelManager;
+        ServerIRC *_server;
 };
 
 #endif

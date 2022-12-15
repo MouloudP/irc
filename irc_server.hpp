@@ -10,6 +10,7 @@
 class ChannelManager;
 class CommandManager;
 
+
 class ServerIRC {
     public:
         ServerIRC();

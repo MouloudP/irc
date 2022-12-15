@@ -44,7 +44,9 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
     }
 
     std::string commandName = args[0];
-    if (commandName == "NICK") {
+     if (commandName == "PASS") { 
+        this->Pass(client, args);
+    } else  if (commandName == "NICK") {
         this->Nick(client, args);
     } else if (commandName == "USER") {
         this->User(client, args);
@@ -56,10 +58,23 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
         this->Part(client, args);
     } else if (commandName == "PRIVMSG") {
         this->PrivMSG(client, args);
-    } else {
-        //client->SendMessage(":mouloud 421 ahamdoun :Unknown command\n");
+    } else if (commandName == "LIST") {
+        this->List(client, args);
     }
+        //client->SendMessage(":mouloud 421 ahamdoun :Unknown command\n");
+}
 
+
+ void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
+    std::cout << "PASS " << this->_server->getPassword() << std::endl;
+    if (args[1] == this->_server->getPassword()) {
+        //client->SetPassword(args[1]);
+        client->SendMessage(":mouloud 001 " + client->GetUserName() + " :Welcome to the Internet Relay Network " + client->GetUserName() + "\r\n");
+    }
+    else {
+        client->SendMessage(":mouloud 464 " + client->GetUserName() + " :Password incorrect\r\n");
+    }
+}
 }
 
 void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
