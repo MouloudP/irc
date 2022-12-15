@@ -18,7 +18,7 @@ class ChannelIRC {
 
         void SetTopic(std::string);
         std::string GetTopic();
-        int		    getClientsCount(void);
+        int getClientsCount(void);
 
 
         void AddClient(ClientIRC *);

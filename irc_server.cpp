@@ -34,6 +34,7 @@ ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
     }
 
     _channelManager = new ChannelManager();
+    _commandManager = new CommandManager(_channelManager);
 }
 
 ServerIRC::~ServerIRC() {
@@ -42,8 +43,8 @@ ServerIRC::~ServerIRC() {
     std::cout << "ServerIRC::~ServerIRC()" << std::endl;
 }
 
-int				ServerIRC::getPort(void) const {return (_port);}
-std::string					ServerIRC::getPassword(void) const {return (_password);}
+int     ServerIRC::getPort(void) const {return (_port);}
+std::string ServerIRC::getPassword(void) const {return (_password);}
 
 ClientIRC *ServerIRC::CreateClient() {
     struct sockaddr_in client;
@@ -93,8 +94,9 @@ void ServerIRC::Run() {
         }
 
         for (int i = 0; i < FD_SETSIZE; i++) {
-            if (FD_ISSET(i, &_readySockets)) {
-                if (i == _sockfd) 
+            if (FD_ISSET(i, &ready_sockets)) {
+                if (i == sockfd) {
+                    ClientIRC *test = this->CreateClient();
                 } else {
                     FD_CLR(i, &_currentSockets);
                 }
@@ -133,48 +135,21 @@ void ServerIRC::Close() {
     }
 }
 
-std::vector<std::string> splitString(std::string str, std::string delimiter) {
-    std::vector<std::string> result;
-    size_t pos = 0;
-    std::string token;
-    while ((pos = str.find(delimiter)) != std::string::npos) {
-        token = str.substr(0, pos);
-        result.push_back(token);
-        str.erase(0, pos + delimiter.length());
-    }
-    if (!str.empty()) {
-        result.push_back(str);
-    }
-    return result;
-}
-
-std::string concatString(std::vector<std::string> str, int start) {
-    std::string result = "";
-    for (int i = start; i < str.size(); i++) {
-        result += str[i];
-        if (i != str.size() - 1) {
-            result += " ";
-        }
-    }
-    return result;
-}
-
 void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {
     //std::cout << "RECEIVE FROM [" << client->GetFd() << "] : " << message << std::endl;
 
     std::vector<std::string> messages = splitString(message, "\n");
     for (auto it = messages.begin(); it != messages.end(); ++it) {
-        this->ExecuteCommand(client, *it);
+        this->commandManager->ExecuteCommand(client, *it);
     }
 }
 
-void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
+/*void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
     std::cout << "MESSAGE RECEIVED : " << command << std::endl;
 
     std::vector<std::string> args = splitString(command, " ");
     std::cout << "COMMAND : " << args[0] << std::endl;
 
-    /*remove \r\n*/
     if (args[args.size() - 1].find("\r") != std::string::npos) {
         args[args.size() - 1].erase(args[args.size() - 1].find("\r"), 1);
     }
@@ -205,8 +180,6 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
         std::cout << "_________________________" << std::endl;
         std::cout << client->GetNick() << std::endl;
         std::cout << "_________________________" << std::endl;
-
-        /*The nick is already take*/
         }
     } else if (args[0] == "USER") {
         std::cout << "USER" << std::endl;
@@ -254,7 +227,7 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
             else if (!channel->HasClient(client))
                  client->SendMessage(":mouloud 442" + client->GetUserName() + " " + channel->GetName() + " :You're not a member of the channel\r\n");
             else
-                /* sinon remove le client du channel */
+                //sinon remove le client du channel 
             std::cout << "PART " << *it << std::endl;
             channel->RemoveClient(client);
         }
@@ -331,4 +304,4 @@ void ServerIRC::ExecuteCommand(ClientIRC *client, std::string command) {
     {
 
     } 
- }        
+ }*/    

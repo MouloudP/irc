@@ -1,13 +1,14 @@
 #ifndef IRC_SERVER_HPP
 # define IRC_SERVER_HPP
 
-
 # include "Include.hpp"
 # include "ClientIRC.hpp"
 # include "ChannelIRC.hpp"
 # include "ChannelManager.hpp"
+# include "CommandManager.hpp"
 
 class ChannelManager;
+class CommandManager;
 
 class ServerIRC {
     public:
@@ -31,6 +32,7 @@ class ServerIRC {
         std::string _password;
         fd_set _readySockets;
         ChannelManager *_channelManager;
+        CommandManager *_commandManager;
         
         /*vector of client*/
         std::vector <ClientIRC *> _clients;
