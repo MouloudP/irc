@@ -18,6 +18,8 @@ class ChannelIRC {
 
         void SetTopic(std::string);
         std::string GetTopic();
+        int getClientsCount(void);
+
 
         void AddClient(ClientIRC *);
         void RemoveClient(ClientIRC *);
@@ -30,10 +32,10 @@ class ChannelIRC {
         std::string GetMode();*/
 
     private:
-        std::string name;
-        std::string topic;
-        std::vector<ClientIRC *> clients;
-        ChannelManager *channelManager;
+        std::string _name;
+        std::string _topic;
+        std::vector<ClientIRC *> _clients;
+        ChannelManager *_channelManager;
         //std::string mode;
 };
 #endif

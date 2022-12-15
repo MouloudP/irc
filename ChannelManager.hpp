@@ -17,7 +17,7 @@ class ChannelManager {
         std::map<std::string, ChannelIRC *> GetChannels();
     
     private:
-        std::map<std::string, ChannelIRC *> channels;
+        std::map<std::string, ChannelIRC *> _channels;
 };
 
 #endif

@@ -22,7 +22,7 @@ class CommandManager {
         void PrivMSG(ClientIRC *, std::vector<std::string>);
 
     private:
-        ChannelManager *channelManager;
+        ChannelManager *_channelManager;
 };
 
 #endif

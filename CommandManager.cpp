@@ -1,6 +1,6 @@
 #include "CommandManager.hpp"
 
-CommandManager::CommandManager(ChannelManager* channelManager): channelManager(channelManager) {}
+CommandManager::CommandManager(ChannelManager* _channelManager): _channelManager(_channelManager) {}
 CommandManager::~CommandManager() {}
 
 std::vector<std::string> splitString(std::string str, std::string delimiter) {
