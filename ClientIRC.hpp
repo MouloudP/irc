@@ -21,6 +21,9 @@ class ClientIRC {
 
         void SetRegistered(bool);
         bool GetRegistered();
+
+        void SetOperator(bool);
+        bool GetOperator();
     
     private:
         int _fd;
@@ -28,5 +31,6 @@ class ClientIRC {
         std::string _username;
         std::string _realname;
         bool _registered;
+        bool _operator;
 };
 #endif

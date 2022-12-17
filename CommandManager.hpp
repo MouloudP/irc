@@ -27,6 +27,10 @@ class CommandManager {
         void Mode(ClientIRC *, std::vector<std::string>);
         void Restart(ClientIRC *, std::vector<std::string>);
         void Kill(ClientIRC *, std::vector<std::string>);
+        void Oper(ClientIRC *, std::vector<std::string>);
+        void Who(ClientIRC *, std::vector<std::string>);
+        void Kick(ClientIRC *, std::vector<std::string>);
+        void Quit(ClientIRC *, std::vector<std::string>);
 
     private:
         ChannelManager *_channelManager;

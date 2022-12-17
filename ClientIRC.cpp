@@ -50,3 +50,11 @@ void ClientIRC::SetRegistered(bool registered) {
 bool ClientIRC::GetRegistered() {
     return _registered;
 }
+
+void ClientIRC::SetOperator(bool op) {
+    this->_operator = op;
+}
+
+bool ClientIRC::GetOperator() {
+    return _operator;
+}

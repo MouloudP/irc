@@ -88,15 +88,19 @@ ClientIRC *ServerIRC::CreateClient() {
 }
 
 void ServerIRC::RemoveClient(ClientIRC *client) {
+    std::vector<ClientIRC *> newClients;
     for (auto it = _clients.begin(); it != _clients.end(); ++it) {
         if ((*it)->GetFd() == client->GetFd()) {
             int fd = client->GetFd();
             close(fd);
             FD_CLR(fd, &_currentSockets);
-            //_clients.erase(it);
-            break;
+        } else {
+            newClients.push_back(*it);
         }
     }
+    std::cout << "Client removed" << std::endl;
+    _clients = newClients;
+    std::cout << "Client removed2" << std::endl;
 }
 
 void ServerIRC::Run() {
