@@ -24,6 +24,9 @@ class ClientIRC {
 
         void SetOperator(bool);
         bool GetOperator();
+
+        void SetKilled(bool);
+        bool GetKilled();
     
     private:
         int _fd;
@@ -32,5 +35,6 @@ class ClientIRC {
         std::string _realname;
         bool _registered;
         bool _operator;
+        bool _killed;
 };
 #endif

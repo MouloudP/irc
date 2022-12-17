@@ -71,15 +71,7 @@ ClientIRC *ServerIRC::CreateClient() {
     ClientIRC *client_irc = new ClientIRC(clientfd);
     _clients.push_back(client_irc);
 
-    /*for (auto it = Clients.begin(); it != Clients.end(); ++it) {
-        std::cout << (*it)->GetFd() << std::endl;
-    }*/
-
-    //std::cout << Clients.size() << std::endl;
-
-    /*Protocol connection*/
     std::cout << "[" << client_irc->GetFd() << "]" << "Client connected" << std::endl;
-
     if (fcntl(client_irc->GetFd(), F_SETFL, fcntl(client_irc->GetFd(), F_GETFL) | O_NONBLOCK) < 0) {
         perror("fcntl");
         exit(1);
@@ -94,13 +86,12 @@ void ServerIRC::RemoveClient(ClientIRC *client) {
             int fd = client->GetFd();
             close(fd);
             FD_CLR(fd, &_currentSockets);
+            (*it)->SetKilled(true);
         } else {
             newClients.push_back(*it);
         }
     }
-    std::cout << "Client removed" << std::endl;
     _clients = newClients;
-    std::cout << "Client removed2" << std::endl;
 }
 
 void ServerIRC::Run() {
@@ -128,7 +119,6 @@ void ServerIRC::Run() {
             }
         }
 
-        // Iteration on Clients
         for (auto it = _clients.begin(); it != _clients.end(); ++it) {
             std::string request = "";
             std::string dataRead = "";
@@ -143,6 +133,9 @@ void ServerIRC::Run() {
             }
             if (!request.empty()) {
                 MesssageReceived((*it), request);
+                if ((*it)->GetKilled()) {
+                    break;
+                }
             }
             buffer[0] = '\0';
         }
@@ -158,10 +151,11 @@ void ServerIRC::Close() {
 }
 
 void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {
-    //std::cout << "RECEIVE FROM [" << client->GetFd() << "] : " << message << std::endl;
-
     std::vector<std::string> messages = splitString(message, "\n");
     for (auto it = messages.begin(); it != messages.end(); ++it) {
         this->_commandManager->ExecuteCommand(client, *it);
+        if (client->GetKilled()) {
+            break;
+        } 
     }
 }

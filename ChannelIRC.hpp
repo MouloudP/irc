@@ -40,7 +40,6 @@ class ChannelIRC {
         ClientIRC *getClientByName(std::string);
         void SetCantVoice(std::string, bool);
         bool GetCantVoice(std::string);
-
         /*void SetMode(std::string);
         std::string GetMode();*/
 
