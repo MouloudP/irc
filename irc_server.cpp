@@ -34,7 +34,7 @@ ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
     }
 
     _channelManager = new ChannelManager();
-    _commandManager = new CommandManager(_channelManager);
+    _commandManager = new CommandManager(_channelManager, this);
 }
 
 ServerIRC::~ServerIRC() {
@@ -45,6 +45,15 @@ ServerIRC::~ServerIRC() {
 
 int     ServerIRC::getPort(void) const {return (_port);}
 std::string ServerIRC::getPassword(void) const {return (_password);}
+std::vector<ClientIRC *> ServerIRC::getClients() {return (_clients);}
+
+ClientIRC *ServerIRC::GetClientByNick(std::string nick) {
+    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+        if ((*it)->GetNick() == nick)
+            return (*it);
+    }
+    return (NULL);
+}
 
 ClientIRC *ServerIRC::CreateClient() {
     struct sockaddr_in client;
@@ -78,6 +87,18 @@ ClientIRC *ServerIRC::CreateClient() {
     return client_irc;
 }
 
+void ServerIRC::RemoveClient(ClientIRC *client) {
+    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+        if ((*it)->GetFd() == client->GetFd()) {
+            int fd = client->GetFd();
+            close(fd);
+            FD_CLR(fd, &_currentSockets);
+            //_clients.erase(it);
+            break;
+        }
+    }
+}
+
 void ServerIRC::Run() {
     FD_ZERO(&_currentSockets);
     FD_SET(_sockfd, &_currentSockets);
@@ -105,8 +126,6 @@ void ServerIRC::Run() {
 
         // Iteration on Clients
         for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-           //Non blocking socket
-
             std::string request = "";
             std::string dataRead = "";
             char buffer[1024];
@@ -119,7 +138,6 @@ void ServerIRC::Run() {
                 request = buffer;
             }
             if (!request.empty()) {
-
                 MesssageReceived((*it), request);
             }
             buffer[0] = '\0';

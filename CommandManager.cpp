@@ -1,6 +1,6 @@
 #include "CommandManager.hpp"
 
-CommandManager::CommandManager(ChannelManager* _channelManager): _channelManager(_channelManager) {}
+CommandManager::CommandManager(ChannelManager* _channelManager, ServerIRC* _server): _channelManager(_channelManager), _server(_server) {}
 CommandManager::~CommandManager() {}
 
 std::vector<std::string> splitString(std::string str, std::string delimiter) {
@@ -46,6 +46,8 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
     std::string commandName = args[0];
     if (commandName == "NICK") {
         this->Nick(client, args);
+    } else if (commandName == "PASS") {
+        this->Pass(client, args);
     } else if (commandName == "USER") {
         this->User(client, args);
     } else if (commandName == "PING") {
@@ -56,6 +58,16 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
         this->Part(client, args);
     } else if (commandName == "PRIVMSG") {
         this->PrivMSG(client, args);
+    } else if (commandName == "LIST") {
+        this->List(client, args);
+    } else if (commandName == "TOPIC") {
+        this->Topic(client, args);
+    } else if (commandName == "MODE") {
+        this->Mode(client, args);
+    } else if (commandName == "restart") {
+        this->Restart(client, args);
+    } else if (commandName == "kill") {
+        this->Kill(client, args);
     } else {
         //client->SendMessage(":mouloud 421 ahamdoun :Unknown command\n");
     }
@@ -192,4 +204,50 @@ void CommandManager::Topic(ClientIRC *client, std::vector<std::string> args) {
         client->SendMessage(":mouloud 461" + client->GetUserName() + args[0] + ":Need more param\n");
     if(!chan->HasClient(client))// a verifier
         client->SendMessage(":mouloud 404 " + client->GetUserName() + " " + args[1] + " :You're not in the channel\r\n");
+}
+
+void CommandManager::Mode(ClientIRC *client, std::vector<std::string> args) {
+    
+}
+
+void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
+    int port = this->_server->getPort();
+    std::string pwd = this->_server->getPassword();
+
+    std::vector<ClientIRC *> clients = this->_server->getClients();
+    for (auto it = clients.begin(); it != clients.end(); ++it) {
+        (*it)->SendMessage(":mouloud 421 " + (*it)->GetUserName() + " :Server is restarting\r\n");
+    }
+    
+    this->_server->Close();
+    startServer(port, pwd);
+    delete this->_server;
+}
+
+void CommandManager::Kill(ClientIRC *client, std::vector<std::string> args) {
+    ClientIRC *clientToKill = this->_server->GetClientByNick(args[1]);
+    if (clientToKill) {
+        clientToKill->SendMessage(":mouloud 421 " + clientToKill->GetUserName() + " :You have been killed\r\n");
+        this->_server->RemoveClient(clientToKill);
+    } else {
+        client->SendMessage(":mouloud 401 " + client->GetUserName() + " " + args[1] + " :No such nick\r\n");
+    }
+}
+
+/*void CommandManager::Quit(ClientIRC *client, std::vector<std::string> args) {
+    std::string message = concatString(args, 1);
+    std::cout << "QUIT " << message << std::endl;
+    client->SendMessage(":mouloud 421 " + client->GetUserName() + " :Server is restarting\r\n");
+    this->_server->RemoveClient(client);
+}*/
+
+void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
+    std::cout << "PASS " << this->_server->getPassword() << std::endl;
+    if (args[1] == this->_server->getPassword()) {
+        //client->SetPassword(args[1]);
+        client->SendMessage(":mouloud 001 " + client->GetUserName() + " :Welcome to the Internet Relay Network " + client->GetUserName() + "\r\n");
+    }
+    else {
+        client->SendMessage(":mouloud 464 " + client->GetUserName() + " :Password incorrect\r\n");
+    }
 }
