@@ -1,11 +1,11 @@
 #include "ChannelIRC.hpp"
 
-ChannelIRC::ChannelIRC(std::string name, ChannelManager *_channelManager): _name(name), _channelManager(_channelManager) {}
+ChannelIRC::ChannelIRC(std::string name, ChannelManager *channelManager, ClientIRC *owner): _name(name), _channelManager(channelManager), _maxClients(0), _moderated(false), _owner(owner) {}
 
 ChannelIRC::~ChannelIRC() {}
 
 void ChannelIRC::SetName(std::string name) {
-    this->_name = name;
+    _name = name;
 }
 
 std::string ChannelIRC::GetName() {
@@ -13,7 +13,7 @@ std::string ChannelIRC::GetName() {
 }
 
 void ChannelIRC::SetTopic(std::string topic) {
-    this->_topic = topic;
+    _topic = topic;
 }
 
 std::string ChannelIRC::GetTopic() {
@@ -32,10 +32,26 @@ void ChannelIRC::AddClient(ClientIRC *client) {
     std::cout << client->GetNick() << std::endl;
     std::cout << "_________________________" << std::endl;
 
+    std::string nameList = "";
+    for (std::vector<ClientIRC *>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+        std::string prefix = "";
+        if ((*it) == _owner)
+            prefix += "@";
+        else if (GetCantVoice((*it)->GetNick()))
+            prefix += "+";
+        nameList += prefix + (*it)->GetNick() + " ";
+    }
+    nameList = nameList.substr(0, nameList.size() - 1);
+
     std::cout << client->GetNick() << " JOIN " << _name << std::endl;
-    this->SendMessage(":" + client->GetUserName() + "!127.0.0.1 " + " JOIN " + _name + "\r\n", client);
-    client->SendMessage(":mouloud 353 " + client->GetNick() + " = " + _name + " :" + client->GetNick() + "\r\n");
+    this->SendMessage(":" + client->GetNick() + "!user@host " + " JOIN " + _name + "\r\n", client);\
+    client->SendMessage(":mouloud 353 " + client->GetNick() + " = " + _name + " :" + nameList + "\r\n");
     client->SendMessage(":mouloud 366 " + client->GetNick() + " " + _name + " :End of /NAMES list.\r\n");
+
+    if (_topic != "")
+        client->SendMessage(":mouloud 332 " + client->GetNick() + " " + _name + " :" + _topic + "\r\n");
+    else
+        client->SendMessage(":mouloud 331 " + client->GetNick() + " " + _name + " :No topic is set\r\n");
 }
 
 void ChannelIRC::RemoveClient(ClientIRC *client) {
@@ -51,7 +67,7 @@ void ChannelIRC::RemoveClient(ClientIRC *client) {
         std::cout << "DELETE CHANNEL" << std::endl;
         _channelManager->DeleteChannel(this);
     } else {
-        this->SendMessage(":" + client->GetUserName() + "!0 " + " PART " + _name + " leave chanel\r\n", NULL);
+        //this->SendMessage(":" + client->GetUserName() + "!0 " + " PART " + _name + " leave chanel\r\n", NULL);
     }
 }
 
@@ -75,3 +91,51 @@ std::vector<ClientIRC *> ChannelIRC::GetClients() {
     return _clients;
 }
 
+void ChannelIRC::SetMaxClients(int maxClients) {
+    _maxClients = maxClients;
+}
+
+int ChannelIRC::GetMaxClients() {
+    return _maxClients;
+}
+
+void ChannelIRC::SetBanPatern(std::string banPatern) {
+    _banPatern = banPatern;
+}
+
+std::string ChannelIRC::GetBanPatern() {
+    return _banPatern;
+}
+
+void ChannelIRC::SetModerated(bool moderated) {
+    _moderated = moderated;
+}
+
+bool ChannelIRC::GetModerated() {
+    return _moderated;
+}
+
+ClientIRC *ChannelIRC::getClientByName(std::string name) {
+    for (std::vector<ClientIRC *>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+        if ((*it)->GetNick() == name) {
+            return (*it);
+        }
+    }
+    return NULL;
+}
+
+void ChannelIRC::SetCantVoice(std::string cantVoice, bool value) {
+    _cantVoice[cantVoice] = value;
+}
+
+bool ChannelIRC::GetCantVoice(std::string cantVoice) {
+    return _cantVoice[cantVoice];
+}
+
+void ChannelIRC::SetOwner(ClientIRC *owner) {
+    _owner = owner;
+}
+
+ClientIRC *ChannelIRC::GetOwner() {
+    return _owner;
+}
