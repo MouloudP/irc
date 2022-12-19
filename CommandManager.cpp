@@ -87,7 +87,7 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
 void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
     //std::cout << "NICK : " << args[1] << std::endl;
 
-    std::cout << " nbfffff -=== " << buf\\ << std::endl;
+   // std::cout << " nbfffff -=== " << buf\\ << std::endl;
     if (args[1].empty()) {
         client->SendMessage(":mouloud 431 ahamdoun" + client->GetUserName() + ": no nickname\n");
     } else {
