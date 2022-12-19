@@ -24,6 +24,7 @@ class CommandManager {
         void PrivMSG(ClientIRC *, std::vector<std::string>);
         void List(ClientIRC *, std::vector<std::string>);
         void Topic(ClientIRC *, std::vector<std::string>);
+        void Pass(ClientIRC *client, std::vector<std::string> args);
         void Mode(ClientIRC *, std::vector<std::string>);
         void Restart(ClientIRC *, std::vector<std::string>);
         void Kill(ClientIRC *, std::vector<std::string>);

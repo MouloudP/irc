@@ -18,16 +18,20 @@ ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
     if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
         perror("setsockopt(SO_REUSEADDR) failed");
 
+    //type of socket created 
     struct sockaddr_in server;
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+
+     //bind the socket to localhost port 
     if (bind(_sockfd, (struct sockaddr *)&server, sizeof(server)) == -1) {
         perror("bind");
         exit(1);
     }
 
+    //try to specify maximum of 10 pending connections for the ocket 
     if (listen(_sockfd, 10) == -1) {
         perror("listen");
         exit(1);
@@ -66,6 +70,7 @@ ClientIRC *ServerIRC::CreateClient() {
         exit(1);
     }
 
+    // Add a descriptor to an fd_set
     FD_SET(clientfd, &_currentSockets);
 
     ClientIRC *client_irc = new ClientIRC(clientfd);
@@ -95,6 +100,7 @@ void ServerIRC::RemoveClient(ClientIRC *client) {
 }
 
 void ServerIRC::Run() {
+    // Clear an fd_set
     FD_ZERO(&_currentSockets);
     FD_SET(_sockfd, &_currentSockets);
 
