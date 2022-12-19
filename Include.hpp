@@ -16,4 +16,6 @@
 # include <fcntl.h>
 
 std::vector<std::string> splitString(std::string str, std::string delimiter);
+void startServer(int port, std::string password);
+
 #endif

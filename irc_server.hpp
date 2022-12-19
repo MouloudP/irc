@@ -25,6 +25,9 @@ class ServerIRC {
         void MesssageReceived(ClientIRC *, std::string);
         void ExecuteCommand(ClientIRC *, std::string);
         ClientIRC *CreateClient();
+        std::vector<ClientIRC *> getClients();
+        ClientIRC *GetClientByNick(std::string);
+        void RemoveClient(ClientIRC *);
     
     private:
         int _port;

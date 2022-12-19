@@ -1,6 +1,6 @@
 #include "ClientIRC.hpp"
 
-ClientIRC::ClientIRC(int fd): _fd(fd), _registered(false) {
+ClientIRC::ClientIRC(int fd): _fd(fd), _registered(false), _killed(false), _operator(false), _buffer("") {
     std::cout << "ClientIRC::ClientIRC(int)" << std::endl;
 }
 
@@ -28,7 +28,7 @@ std::string ClientIRC::GetNick() {
 }
 
 void ClientIRC::SetUserName(std::string username) {
-    this->_username = username;
+    _username = username;
 }
 
 std::string ClientIRC::GetUserName() {
@@ -36,7 +36,7 @@ std::string ClientIRC::GetUserName() {
 }
 
 void ClientIRC::SetRealName(std::string realname) {
-    this->_realname = realname;
+    _realname = realname;
 }
 
 std::string ClientIRC::GetRealName() {
@@ -44,9 +44,33 @@ std::string ClientIRC::GetRealName() {
 }
 
 void ClientIRC::SetRegistered(bool registered) {
-    this->_registered = registered;
+    _registered = registered;
 }
 
 bool ClientIRC::GetRegistered() {
     return _registered;
+}
+
+void ClientIRC::SetOperator(bool op) {
+    _operator = op;
+}
+
+bool ClientIRC::GetOperator() {
+    return _operator;
+}
+
+void ClientIRC::SetKilled(bool killed) {
+    _killed = killed;
+}
+
+bool ClientIRC::GetKilled() {
+    return _killed;
+}
+
+void ClientIRC::SetBuffer(std::string buffer) {
+    _buffer = buffer;
+}
+
+std::string ClientIRC::GetBuffer() {
+    return _buffer;
 }

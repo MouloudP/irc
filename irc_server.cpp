@@ -49,6 +49,15 @@ ServerIRC::~ServerIRC() {
 
 int     ServerIRC::getPort(void) const {return (_port);}
 std::string ServerIRC::getPassword(void) const {return (_password);}
+std::vector<ClientIRC *> ServerIRC::getClients() {return (_clients);}
+
+ClientIRC *ServerIRC::GetClientByNick(std::string nick) {
+    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+        if ((*it)->GetNick() == nick)
+            return (*it);
+    }
+    return (NULL);
+}
 
 ClientIRC *ServerIRC::CreateClient() {
     struct sockaddr_in client;
@@ -67,20 +76,27 @@ ClientIRC *ServerIRC::CreateClient() {
     ClientIRC *client_irc = new ClientIRC(clientfd);
     _clients.push_back(client_irc);
 
-    /*for (auto it = Clients.begin(); it != Clients.end(); ++it) {
-        std::cout << (*it)->GetFd() << std::endl;
-    }*/
-
-    //std::cout << Clients.size() << std::endl;
-
-    /*Protocol connection*/
     std::cout << "[" << client_irc->GetFd() << "]" << "Client connected" << std::endl;
-
     if (fcntl(client_irc->GetFd(), F_SETFL, fcntl(client_irc->GetFd(), F_GETFL) | O_NONBLOCK) < 0) {
         perror("fcntl");
         exit(1);
     }
     return client_irc;
+}
+
+void ServerIRC::RemoveClient(ClientIRC *client) {
+    std::vector<ClientIRC *> newClients;
+    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+        if ((*it)->GetFd() == client->GetFd()) {
+            int fd = client->GetFd();
+            close(fd);
+            FD_CLR(fd, &_currentSockets);
+            (*it)->SetKilled(true);
+        } else {
+            newClients.push_back(*it);
+        }
+    }
+    _clients = newClients;
 }
 
 void ServerIRC::Run() {
@@ -109,24 +125,22 @@ void ServerIRC::Run() {
             }
         }
 
-        // Iteration on Clients
         for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-           //Non blocking socket
-
-            std::string request = "";
-            std::string dataRead = "";
             char buffer[1024];
+            std::string clientBuffer = (*it)->GetBuffer();
 
             int lenght = recv((*it)->GetFd(), buffer, sizeof(buffer), 0);
             if (lenght > 0) {
                 buffer[lenght] = '\0';
-                //std::cout << "\\BUFFER = " << buffer << std::endl;
                 fflush(stdout);
-                request = buffer;
-            }
-            if (!request.empty()) {
-
-                MesssageReceived((*it), request);
+                clientBuffer += buffer;
+                (*it)->SetBuffer(clientBuffer);
+            } else if (clientBuffer[clientBuffer.size() - 1] == '\n') {
+                (*it)->SetBuffer("");
+                MesssageReceived((*it), clientBuffer);
+                if ((*it)->GetKilled()) {
+                    break;
+                }
             }
             buffer[0] = '\0';
         }
@@ -142,11 +156,11 @@ void ServerIRC::Close() {
 }
 
 void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {
-    //std::cout << "RECEIVE FROM [" << client->GetFd() << "] : " << message << std::endl;
-
-    std::cout << "fd  server ==== " << client->GetFd() << std::endl;
     std::vector<std::string> messages = splitString(message, "\n");
     for (auto it = messages.begin(); it != messages.end(); ++it) {
         this->_commandManager->ExecuteCommand(client, *it);
+        if (client->GetKilled()) {
+            break;
+        } 
     }
 }
