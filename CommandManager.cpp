@@ -85,7 +85,7 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
 }
 
 
- void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
+void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
     std::cout << "PASS ==" << this->_server->getPassword() << std::endl;
        std::cout << "args == " << args[1] << std::endl;
     if (args[1] == this->_server->getPassword()) {
@@ -315,17 +315,6 @@ void CommandManager::Quit(ClientIRC *client, std::vector<std::string> args) {
         }
     }
     _server->RemoveClient(client);
-}
-
-void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
-    std::cout << "PASS " << this->_server->getPassword() << std::endl;
-    if (args[1] == this->_server->getPassword()) {
-        //client->SetPassword(args[1]);
-        client->SendMessage(":mouloud 001 " + client->GetNick() + " :Welcome to the Internet Relay Network " + client->GetNick() + "\r\n");
-    }
-    else {
-        client->SendMessage(":mouloud 464 " + client->GetNick() + " :Password incorrect\r\n");
-    }
 }
 
 void CommandManager::Mode(ClientIRC *client, std::vector<std::string> args) {

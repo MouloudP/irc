@@ -126,6 +126,9 @@ void ServerIRC::Run() {
         }
 
         for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+            if ((*it)->GetKilled()) {
+                continue;
+            }
             char buffer[1024];
             std::string clientBuffer = (*it)->GetBuffer();
 
