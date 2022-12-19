@@ -28,7 +28,6 @@ class CommandManager {
         void Restart(ClientIRC *, std::vector<std::string>);
         void Kill(ClientIRC *, std::vector<std::string>);
         void Oper(ClientIRC *, std::vector<std::string>);
-        void Who(ClientIRC *, std::vector<std::string>);
         void Kick(ClientIRC *, std::vector<std::string>);
         void Quit(ClientIRC *, std::vector<std::string>);
 

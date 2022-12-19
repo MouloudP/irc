@@ -120,19 +120,18 @@ void ServerIRC::Run() {
         }
 
         for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-            std::string request = "";
-            std::string dataRead = "";
             char buffer[1024];
+            std::string clientBuffer = (*it)->GetBuffer();
 
             int lenght = recv((*it)->GetFd(), buffer, sizeof(buffer), 0);
             if (lenght > 0) {
                 buffer[lenght] = '\0';
-                //std::cout << "\\BUFFER = " << buffer << std::endl;
                 fflush(stdout);
-                request = buffer;
-            }
-            if (!request.empty()) {
-                MesssageReceived((*it), request);
+                clientBuffer += buffer;
+                (*it)->SetBuffer(clientBuffer);
+            } else if (clientBuffer[clientBuffer.size() - 1] == '\n') {
+                (*it)->SetBuffer("");
+                MesssageReceived((*it), clientBuffer);
                 if ((*it)->GetKilled()) {
                     break;
                 }

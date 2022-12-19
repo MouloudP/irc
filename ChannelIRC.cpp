@@ -1,6 +1,6 @@
 #include "ChannelIRC.hpp"
 
-ChannelIRC::ChannelIRC(std::string name, ChannelManager *_channelManager): _name(name), _channelManager(_channelManager), _maxClients(0), _moderated(false) {}
+ChannelIRC::ChannelIRC(std::string name, ChannelManager *channelManager, ClientIRC *owner): _name(name), _channelManager(channelManager), _maxClients(0), _moderated(false), _owner(owner) {}
 
 ChannelIRC::~ChannelIRC() {}
 
@@ -35,9 +35,9 @@ void ChannelIRC::AddClient(ClientIRC *client) {
     std::string nameList = "";
     for (std::vector<ClientIRC *>::iterator it = _clients.begin(); it != _clients.end(); it++) {
         std::string prefix = "";
-        if ((*it)->GetOperator())
+        if ((*it) == _owner)
             prefix += "@";
-        if (GetCantVoice((*it)->GetNick()))
+        else if (GetCantVoice((*it)->GetNick()))
             prefix += "+";
         nameList += prefix + (*it)->GetNick() + " ";
     }
@@ -45,9 +45,13 @@ void ChannelIRC::AddClient(ClientIRC *client) {
 
     std::cout << client->GetNick() << " JOIN " << _name << std::endl;
     this->SendMessage(":" + client->GetNick() + "!user@host " + " JOIN " + _name + "\r\n", client);\
-    client->SendMessage(":mouloud 331 " + client->GetNick() + " " + _name + " :No topic is set\r\n");
     client->SendMessage(":mouloud 353 " + client->GetNick() + " = " + _name + " :" + nameList + "\r\n");
     client->SendMessage(":mouloud 366 " + client->GetNick() + " " + _name + " :End of /NAMES list.\r\n");
+
+    if (_topic != "")
+        client->SendMessage(":mouloud 332 " + client->GetNick() + " " + _name + " :" + _topic + "\r\n");
+    else
+        client->SendMessage(":mouloud 331 " + client->GetNick() + " " + _name + " :No topic is set\r\n");
 }
 
 void ChannelIRC::RemoveClient(ClientIRC *client) {
@@ -126,4 +130,12 @@ void ChannelIRC::SetCantVoice(std::string cantVoice, bool value) {
 
 bool ChannelIRC::GetCantVoice(std::string cantVoice) {
     return _cantVoice[cantVoice];
+}
+
+void ChannelIRC::SetOwner(ClientIRC *owner) {
+    _owner = owner;
+}
+
+ClientIRC *ChannelIRC::GetOwner() {
+    return _owner;
 }

@@ -4,7 +4,7 @@ ChannelManager::ChannelManager() {}
 ChannelManager::~ChannelManager() {}
 
 ChannelIRC *ChannelManager::CreateChannel(std::string name, ClientIRC *client) {
-    ChannelIRC *channel = new ChannelIRC(name, this);
+    ChannelIRC *channel = new ChannelIRC(name, this, client);
     _channels[name] = channel;
     
     std::cout << "CREATE CHANNEL |" << name << "|" << std::endl;

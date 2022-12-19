@@ -10,7 +10,7 @@ class ChannelManager;
 
 class ChannelIRC {
     public:
-        ChannelIRC(std::string, ChannelManager *);
+        ChannelIRC(std::string, ChannelManager *, ClientIRC *);
         ~ChannelIRC();
 
         void SetName(std::string);
@@ -40,8 +40,9 @@ class ChannelIRC {
         ClientIRC *getClientByName(std::string);
         void SetCantVoice(std::string, bool);
         bool GetCantVoice(std::string);
-        /*void SetMode(std::string);
-        std::string GetMode();*/
+
+        void SetOwner(ClientIRC *);
+        ClientIRC *GetOwner();
 
     private:
         std::string _name;
@@ -52,6 +53,7 @@ class ChannelIRC {
         std::string _banPatern;
         bool _moderated;
         std::map<std::string, bool> _cantVoice;
+        ClientIRC *_owner;
         //std::string mode;
 };
 #endif
