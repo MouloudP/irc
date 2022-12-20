@@ -10,6 +10,9 @@ class ClientIRC {
         void SendMessage(const std::string);
         void ClientConnect();
 
+        void	setPassword(bool s);
+        bool    getPassword();
+
         void SetNick(std::string);
         std::string GetNick();
 
@@ -36,6 +39,7 @@ class ClientIRC {
         std::string _nickname;
         std::string _username;
         std::string _realname;
+        bool _mdp;
         bool _registered;
         bool _operator;
         bool _killed;

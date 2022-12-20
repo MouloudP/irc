@@ -19,6 +19,14 @@ void ClientIRC::SendMessage(const std::string msg) {
     send(_fd, message, strlen(message), 0);
 }
 
+void	ClientIRC::setPassword(bool s) {
+    _mdp = s;
+}
+
+bool	ClientIRC::getPassword() {
+    return _mdp;
+}
+
 void ClientIRC::SetNick(std::string nick) {
     _nickname = nick;
 }
@@ -74,3 +82,4 @@ void ClientIRC::SetBuffer(std::string buffer) {
 std::string ClientIRC::GetBuffer() {
     return _buffer;
 }
+
