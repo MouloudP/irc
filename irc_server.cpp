@@ -44,6 +44,13 @@ ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
 ServerIRC::~ServerIRC() {
     close(_sockfd);
 
+    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+        delete (*it);
+    }
+
+    delete _channelManager;
+    delete _commandManager;
+
     std::cout << "ServerIRC::~ServerIRC()" << std::endl;
 }
 
@@ -108,7 +115,7 @@ void ServerIRC::Run() {
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
 
-    while (true) {
+    while (keepRunning) {
         _readySockets = _currentSockets;
         if (select(FD_SETSIZE, &_readySockets, NULL, NULL, &timeout) < 0) {
             perror("select");
@@ -121,6 +128,14 @@ void ServerIRC::Run() {
                     ClientIRC *test = this->CreateClient();
                 } else {
                     FD_CLR(i, &_currentSockets);
+
+                    std::cout << "Client disconnected" << std::endl;
+                    //delete client who leave
+                    /*for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+                        if ((*it) && !(*it)->GetKilled() && (*it)->GetFd() == i) {
+                            RemoveClient((*it));
+                        }
+                    }*/
                 }
             }
         }
