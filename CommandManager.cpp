@@ -164,15 +164,18 @@ void CommandManager::Join(ClientIRC *client, std::vector<std::string> args) {
         return;
     }
 
-    ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
-    if (channel) {
-        if (channel->GetMaxClients() != 0 && channel->GetClients().size() >= channel->GetMaxClients()) {
-            client->SendMessage(":mouloud 471 ahamdoun " + args[1] + " :Cannot join channel (+l)\r\n");
-            return;
+    std::vector<std::string> channels = splitString(args[1], ",");
+    for (auto it = channels.begin(); it != channels.end(); ++it) {
+        ChannelIRC *channel = this->_channelManager->GetChannel((*it));
+        if (channel) {
+            if (channel->GetMaxClients() != 0 && channel->GetClients().size() >= channel->GetMaxClients()) {
+                client->SendMessage(":mouloud 471 ahamdoun " + (*it) + " :Cannot join channel (+l)\r\n");
+                continue;
+            }
+            channel->AddClient(client);
+        } else {
+            this->_channelManager->CreateChannel((*it), client);
         }
-        channel->AddClient(client);
-    } else {
-        this->_channelManager->CreateChannel(args[1], client);
     }
 }
 
@@ -208,7 +211,6 @@ void CommandManager::PrivMSG(ClientIRC *client, std::vector<std::string> args) {
     }
 
     std::string message = concatString(args, 2);
-    std::cout << "PRIVMSG " << args[1] << " : " << message << std::endl;
     ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
     ClientIRC *clientT = this->_server->GetClientByNick(args[1]);
     if (!channel && !clientT) {
@@ -241,11 +243,11 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
         for (auto it = chan.begin();it != chan.end();it++)
         {
             ChannelIRC *channel = this->_channelManager->GetChannel(it->first);
+            if (!channel) continue;
             ss << channel->getClientsCount();
             ss >> count;
             ss.clear();
-            client->SendMessage(": mouloud 322 " + client->GetUserName() + " "  + channel->GetName() +
-                " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
+            client->SendMessage(":mouloud 322 " + client->GetUserName() + " "  + channel->GetName() + " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
             std::cout << "CHANNEL |" << it->first << "|" << std::endl;
         }
     }
@@ -337,7 +339,7 @@ void CommandManager::Quit(ClientIRC *client, std::vector<std::string> args) {
 
     std::map<std::string, ChannelIRC *> channels = _channelManager->GetChannels();
     for (auto it = channels.begin(); it != channels.end(); ++it) {
-        if (it->second->HasClient(client)) {
+        if (it->second && it->second->HasClient(client)) {
             it->second->SendMessage(":" + client->GetNick() + "!user@host QUIT " + reason + "\r\n", client);
             it->second->RemoveClient(client);
         }

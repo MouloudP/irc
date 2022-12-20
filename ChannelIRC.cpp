@@ -73,7 +73,7 @@ void ChannelIRC::RemoveClient(ClientIRC *client) {
 
 bool ChannelIRC::HasClient(ClientIRC *client) {
     for (std::vector<ClientIRC *>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-        if (*it == client) {
+        if (*it == client && !client->GetKilled()) {
             return true;
         }
     }
