@@ -103,17 +103,21 @@ void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
 
 void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
     if (args[1].empty()) {
-        client->SendMessage(":mouloud 431 ahamdoun" + client->GetUserName() + ": no nickname\n");
+        client->SendMessage(":mouloud 431 ahamdoun" + client->GetNick() + ": no nickname\n");
+        return;
+    }
+
+    ClientIRC *client2 = this->_server->GetClientByNick(args[1]);
+    if (client2 != NULL) {
+        client->SendMessage(":mouloud 433 ahamdoun" + client->GetNick() + ": nickname already in use\n");
+        if (!client->GetRegistered()) {
+            _server->RemoveClient(client);
+        }
         return;
     }
 
     std::string oldNick = client->GetNick();
-    if (args[1] == "_") {
-        client->SendMessage(":mouloud 432 ahamdoun :Erroneous nickname\n");
-    } else {
-        //client->SendMessage(":mouloud 433 ahamdoun :ahamdoun is already in use\n");
-        client->SetNick(args[1]);
-    }
+    client->SetNick(args[1]);
     std::cout << "_________________________" << std::endl;
     std::cout << client->GetNick() << std::endl;
     std::cout << "_________________________" << std::endl;
@@ -268,7 +272,7 @@ void CommandManager::Topic(ClientIRC *client, std::vector<std::string> args) {
         return;
     }
     
-    std::string topic = concatString(args, 2);
+    std::string topic = concatString(args, 2).erase(0, 1);
     channel->SetTopic(topic);
     channel->SendMessage(":" + client->GetNick() + " TOPIC " + args[1] + " " + topic + "\r\n", client);
 }
@@ -415,7 +419,7 @@ void CommandManager::Oper(ClientIRC *client, std::vector<std::string> args) {
         return;
     }
 
-    if (args[1] == "mouloud" && args[2] == "mouloud") {
+    if (args[1] == "admin" && args[2] == "1233") {
         client->SetOperator(true);
         client->SendMessage(":mouloud 381 " + client->GetUserName() + " :You are now an IRC operator\r\n");
     } else {
