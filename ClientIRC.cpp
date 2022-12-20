@@ -1,6 +1,6 @@
 #include "ClientIRC.hpp"
 
-ClientIRC::ClientIRC(int fd): _fd(fd), _registered(false), _killed(false), _operator(false), _buffer("") {
+ClientIRC::ClientIRC(int fd): _fd(fd), _mdp(false), _registered(false), _killed(false), _operator(false), _buffer("") {
     std::cout << "ClientIRC::ClientIRC(int)" << std::endl;
 }
 

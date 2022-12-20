@@ -1,12 +1,11 @@
 #include "irc_server.hpp"
 
-//ServerIRC server;
+bool keepRunning = true;
 
-/*void signalKill(int sig) {
-    server.Close();
+void signalKill(int sig) {
     std::cout << "TURNING OFF" << std::endl;
-    exit(0);
-}*/
+    keepRunning = false;
+}
 
 void startServer(int port, std::string password) {
     ServerIRC server(port, password);
@@ -18,10 +17,8 @@ int main(int argc, char *argv[]) {
         std::cout << "Usage: " << argv[0] << " <port> <password>" << std::endl;
         return 1;
     }
+    signal(SIGINT, signalKill);
     startServer(atoi(argv[1]), argv[2]);
-    //signal(SIGINT, signalKill);
-    /*ServerIRC server(atoi(argv[1]), argv[2]);
-    server.Run();*/
-    
+
     return 0;
 }

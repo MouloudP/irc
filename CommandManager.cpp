@@ -51,11 +51,14 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
         this->Pass(client, args);
     } else  if (commandName == "NICK") {
         this->Nick(client, args);
-    } else if (commandName == "PASS") {
-        this->Pass(client, args);
     } else if (commandName == "USER") {
         this->User(client, args);
-    } else if (commandName == "PING") {
+    }
+
+    if (!client->GetRegistered())
+        return;
+
+    if (commandName == "PING") {
         this->Ping(client, args);
     } else if (commandName == "JOIN") {
         this->Join(client, args);
@@ -69,7 +72,7 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
         this->Topic(client, args);
     } else if (commandName == "MODE") {
         this->Mode(client, args);
-    } else if (commandName == "restart") {
+    } else if (commandName == "restart" || commandName == "RESTART") {
         this->Restart(client, args);
     } else if (commandName == "kill" || commandName == "KILL") {
         this->Kill(client, args);
@@ -82,15 +85,15 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
     } else if (commandName == "CAP") {
 
     } else {
-        client->SendMessage(":mouloud 421 ahamdoun " + commandName +  ":Unknown command\n");
+        client->SendMessage(":mouloud 421 " + commandName +  ":Unknown command\n");
     }
 }
 
 void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
     if (client->getPassword()) {
-        client->SendMessage(":mouloud 462 ahamdoun :You may not reregister\n");
+        client->SendMessage(":mouloud 462 :You may not reregister\n");
     } else if (args.size() < 2) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " PASS :Not enough parameters\n");
+        client->SendMessage(":mouloud 461 PASS :Not enough parameters\n");
          _server->RemoveClient(client);
     } else if (args[1] == this->_server->getPassword()) {
         client->setPassword(true);
@@ -103,13 +106,13 @@ void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
 
 void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 2) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " NICK :Not enough parameters\n");
+        client->SendMessage(":mouloud 461 " + client->GetNick() + " NICK :Not enough parameters\r\n");
         return;
     }
 
     ClientIRC *client2 = this->_server->GetClientByNick(args[1]);
     if (client2 != NULL) {
-        client->SendMessage(":mouloud 433 ahamdoun" + client->GetNick() + ": nickname already in use\n");
+        client->SendMessage("Nickname already in use\r\n");
         if (!client->GetRegistered()) {
             _server->RemoveClient(client);
         }
@@ -117,6 +120,7 @@ void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
     }
     std::string oldNick = client->GetNick();
     client->SetNick(args[1]);
+
     std::cout << "_________________________" << std::endl;
     std::cout << client->GetNick() << std::endl;
     std::cout << "_________________________" << std::endl;
@@ -190,7 +194,7 @@ void CommandManager::Part(ClientIRC *client, std::vector<std::string> args) {
         ChannelIRC *channel = this->_channelManager->GetChannel(*it);
         if (!channel) {
             std::cout << "Channel " << *it << " not found" << std::endl;
-            client->SendMessage(":mouloud 403 ahamdoun " + *it + " :No such channel\r\n");
+            client->SendMessage(":mouloud 403 " + client->GetNick() + " " + *it + " :No such channel\r\n");
             continue;
         }
 
@@ -219,7 +223,7 @@ void CommandManager::PrivMSG(ClientIRC *client, std::vector<std::string> args) {
     }
     if (channel) {
         if (!channel->HasClient(client)) {
-            client->SendMessage(":mouloud 404 " + client->GetUserName() + " " + args[1] + " :You are not in the chanel\r\n");
+            client->SendMessage(":mouloud 404 " + client->GetNick() + " " + args[1] + " :You are not in the chanel\r\n");
             return;
         }
         if (channel->GetCantVoice(client->GetNick())) {
@@ -304,6 +308,10 @@ void CommandManager::Topic(ClientIRC *client, std::vector<std::string> args) {
 }
 
 void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
+    if (!client->GetOperator()) {
+        client->SendMessage(":mouloud 481 " + client->GetNick() + " :Permission Denied- You're not an IRC operator\r\n");
+        return;
+    }
     int port = this->_server->getPort();
     std::string pwd = this->_server->getPassword();
 

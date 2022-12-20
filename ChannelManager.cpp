@@ -1,7 +1,9 @@
 #include "ChannelManager.hpp"
 
 ChannelManager::ChannelManager() {}
-ChannelManager::~ChannelManager() {}
+ChannelManager::~ChannelManager() {
+    DeleteAllChannels();
+}
 
 ChannelIRC *ChannelManager::CreateChannel(std::string name, ClientIRC *client) {
     ChannelIRC *channel = new ChannelIRC(name, this, client);
@@ -31,6 +33,7 @@ void ChannelManager::DeleteChannel(ChannelIRC *channel) {
 
 void ChannelManager::DeleteAllChannels() {
     for (std::map<std::string, ChannelIRC *>::iterator it = _channels.begin(); it != _channels.end(); it++) {
+        if (!it->second) continue;
         delete it->second;
     }
     _channels.clear();
