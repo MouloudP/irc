@@ -14,10 +14,10 @@ ChannelIRC *ChannelManager::CreateChannel(std::string name, ClientIRC *client) {
 }
 
 ChannelIRC *ChannelManager::GetChannel(std::string name) {
-    std::cout << "I WANT THE CHANNELLLLLL |" << name << "|" << std::endl;
+    //std::cout << "I WANT THE CHANNELLLLLL |" << name << "|" << std::endl;
 
-    for (std::map<std::string, ChannelIRC *>::iterator it = _channels.begin(); it != _channels.end(); it++)
-        std::cout << "CHANNEL |" << it->first << "|" << std::endl;
+    /*for (std::map<std::string, ChannelIRC *>::iterator it = _channels.begin(); it != _channels.end(); it++)
+        std::cout << "CHANNEL |" << it->first << "|" << std::endl;*/
 
     return _channels[name];
 }

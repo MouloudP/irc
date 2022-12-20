@@ -10,8 +10,8 @@ class ClientIRC {
         void SendMessage(const std::string);
         void ClientConnect();
 
-        void	setPassword(bool s);
-        bool    getPassword();
+        void setPassword(bool s);
+        bool getPassword();
 
         void SetNick(std::string);
         std::string GetNick();
