@@ -10,6 +10,7 @@ class ClientIRC;
 class ServerIRC;
 
 class CommandManager {
+    typedef  std::vector<std::string>::iterator iterator;
     public:
         CommandManager(ChannelManager *, ServerIRC *);
         ~CommandManager();

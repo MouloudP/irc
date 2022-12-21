@@ -11,6 +11,9 @@ class ChannelManager;
 class CommandManager;
 
 class ServerIRC {
+
+    typedef std::vector<ClientIRC* >::iterator iterator;
+
     public:
         ServerIRC();
         ServerIRC(int, std::string);

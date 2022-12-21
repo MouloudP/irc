@@ -3,6 +3,7 @@
 # include "Include.hpp"
 
 class ClientIRC {
+
     public:
         ClientIRC(int);
         ~ClientIRC();
