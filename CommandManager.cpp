@@ -234,9 +234,9 @@ void CommandManager::PrivMSG(ClientIRC *client, std::vector<std::string> args) {
 }
 
 void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
-    client->SendMessage(":mouloud 321 " + client->GetUserName() + " :Channel :Users Name\r\n" );
+    client->SendMessage(":mouloud 321 " + client->GetNick() + " :Channel :Users Name\r\n" );
     std::map<std::string, ChannelIRC *> chan = _channelManager->GetChannels();
-    if (args[1].empty())
+    if (args.size() < 2)
     {
         std::stringstream ss;
         std::string count;
@@ -247,7 +247,7 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
             ss << channel->getClientsCount();
             ss >> count;
             ss.clear();
-            client->SendMessage(":mouloud 322 " + client->GetUserName() + " "  + channel->GetName() + " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
+            client->SendMessage(":mouloud 322 " + client->GetNick() + " "  + channel->GetName() + " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
             std::cout << "CHANNEL |" << it->first << "|" << std::endl;
         }
     }
@@ -260,6 +260,7 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
             for (auto it = chan.begin();it != chan.end();it++)
             {
                 ChannelIRC *channel = this->_channelManager->GetChannel(it->first);
+                if (!channel) continue;
                 ss << channel->getClientsCount();
                 ss >> count;
                 ss.clear();
@@ -268,7 +269,7 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
                 name = "#"+name;
                 if (comp == name)
                 {
-                    client->SendMessage(": mouloud 322 " + client->GetUserName() + " "  + channel->GetName() +
+                    client->SendMessage(":mouloud 322 " + client->GetNick() + " "  + channel->GetName() +
                     " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
                     std::cout <<  "name == " << comp<< std::endl;
                 }
@@ -441,8 +442,8 @@ void CommandManager::Mode(ClientIRC *client, std::vector<std::string> args) {
 }
 
 void CommandManager::Oper(ClientIRC *client, std::vector<std::string> args) {
-    if (args[1].empty() || args[2].empty()) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " OPER :Not enough parameters\r\n");
+    if (args.size() < 3) {
+        client->SendMessage(":mouloud 461 " + client->GetNick() + " OPER :Not enough parameters\n");
         return;
     }
 
