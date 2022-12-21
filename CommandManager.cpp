@@ -53,6 +53,8 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
         this->Nick(client, args);
     } else if (commandName == "USER") {
         this->User(client, args);
+    } else if (commandName == "CAP") {
+        
     } else if (!client->GetRegistered()) {
         client->SendMessage(":ircserver 451 :You have not registered\n");
         return;
@@ -80,14 +82,13 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
         this->Kick(client, args);
     } else if (commandName == "QUIT") {
         this->Quit(client, args);
-    } else if (commandName == "CAP") {
-
     } else {
         client->SendMessage(":ircserver 421 " + commandName +  ":Unknown command\n");
     }
 }
 
 void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
+    std::string password = concatString(args, 1);
     if (_server->getClientSize() > 10) {
         client->SendMessage(":ircserver 451 :Too many clients connected\r\n");
         _server->RemoveClient(client);
@@ -96,7 +97,7 @@ void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
     } else if (args.size() < 2) {
         client->SendMessage(":ircserver 461 PASS :Not enough parameters\n");
          _server->RemoveClient(client);
-    } else if (args[1] == this->_server->getPassword()) {
+    } else if (password == this->_server->getPassword()) {
         client->setPassword(true);
     } else {
         client->SendMessage(":ircserver 464 :Password incorrect\r\n");
