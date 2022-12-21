@@ -142,7 +142,6 @@ void CommandManager::User(ClientIRC *client, std::vector<std::string> args) {
     std::string RealName = concatString(args, 4).erase(0, 1);
     client->SetUserName(args[1]);
     client->SetRealName(RealName);
-
     if (!client->getPassword()) {
         client->SendMessage(":mouloud 464 :Bad password\r\n");
         _server->RemoveClient(client);
