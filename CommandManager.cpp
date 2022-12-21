@@ -53,12 +53,9 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
         this->Nick(client, args);
     } else if (commandName == "USER") {
         this->User(client, args);
-    }
-
-    if (!client->GetRegistered())
+    } else if (!client->GetRegistered()) {
         return;
-
-    if (commandName == "PING") {
+    } else if (commandName == "PING") {
         this->Ping(client, args);
     } else if (commandName == "JOIN") {
         this->Join(client, args);
@@ -201,8 +198,8 @@ void CommandManager::Part(ClientIRC *client, std::vector<std::string> args) {
         if (args.size() > 2) {
             reason = concatString(args, 2);
         }
-        channel->SendMessage(":" + client->GetNick() + "!user@host PART " + *it + " " + reason + "\r\n", client);
-        client->SendMessage(":" + client->GetNick() + "!user@host KICK " + *it + " " + client->GetNick() +  " " + reason + "\r\n");
+        channel->SendMessage(":" + client->GetNick() + "!user@host PART " + *it + " " + reason + "\r\n", NULL);
+        //client->SendMessage(":" + client->GetNick() + "!user@host KICK " + *it + " " + client->GetNick() +  " " + reason + "\r\n");
         channel->RemoveClient(client);
     }
 }
@@ -316,12 +313,12 @@ void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
 
     std::vector<ClientIRC *> clients = this->_server->getClients();
     for (auto it = clients.begin(); it != clients.end(); ++it) {
+        if ((*it)->GetKilled()) continue;
         (*it)->SendMessage(":mouloud 421 " + (*it)->GetNick() + " :Server is restarting\r\n");
     }
     
     this->_server->Close();
     startServer(port, pwd);
-    delete this->_server;
 }
 
 void CommandManager::Kill(ClientIRC *client, std::vector<std::string> args) {

@@ -1,10 +1,9 @@
 #include "irc_server.hpp"
 
 ServerIRC::ServerIRC() {
-    std::cout << "ServerIRC::ServerIRC()" << std::endl;
 }
 
-ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
+ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s), _running(true) {
     std::cout << "ServerIRC::ServerIRC(int)" << std::endl;
 
     _sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -14,24 +13,19 @@ ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s) {
     }
 
     int yes = 1;
-
     if (setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0)
         perror("setsockopt(SO_REUSEADDR) failed");
 
-    //type of socket created 
     struct sockaddr_in server;
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-
-     //bind the socket to localhost port 
     if (bind(_sockfd, (struct sockaddr *)&server, sizeof(server)) == -1) {
         perror("bind");
         exit(1);
     }
 
-    //try to specify maximum of 10 pending connections for the ocket 
     if (listen(_sockfd, 10) == -1) {
         perror("listen");
         exit(1);
@@ -54,13 +48,21 @@ ServerIRC::~ServerIRC() {
     std::cout << "ServerIRC::~ServerIRC()" << std::endl;
 }
 
-int     ServerIRC::getPort(void) const {return (_port);}
-std::string ServerIRC::getPassword(void) const {return (_password);}
-std::vector<ClientIRC *> ServerIRC::getClients() {return (_clients);}
+int ServerIRC::getPort(void) const {
+    return (_port);
+}
+
+std::string ServerIRC::getPassword(void) const {
+    return (_password);
+}
+
+std::vector<ClientIRC *> ServerIRC::getClients() {
+    return (_clients);
+}
 
 ClientIRC *ServerIRC::GetClientByNick(std::string nick) {
     for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-        if ((*it)->GetNick() == nick)
+        if (!(*it)->GetKilled() && (*it)->GetNick() == nick)
             return (*it);
     }
     return (NULL);
@@ -77,7 +79,6 @@ ClientIRC *ServerIRC::CreateClient() {
         exit(1);
     }
 
-    // Add a descriptor to an fd_set
     FD_SET(clientfd, &_currentSockets);
 
     ClientIRC *client_irc = new ClientIRC(clientfd);
@@ -92,22 +93,17 @@ ClientIRC *ServerIRC::CreateClient() {
 }
 
 void ServerIRC::RemoveClient(ClientIRC *client) {
-    std::vector<ClientIRC *> newClients;
     for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-        if ((*it)->GetFd() == client->GetFd()) {
+        if (!(*it)->GetKilled() && (*it)->GetFd() == client->GetFd()) {
             int fd = client->GetFd();
             close(fd);
             FD_CLR(fd, &_currentSockets);
             (*it)->SetKilled(true);
-        } else {
-            newClients.push_back(*it);
         }
     }
-    _clients = newClients;
 }
 
 void ServerIRC::Run() {
-    // Clear an fd_set
     FD_ZERO(&_currentSockets);
     FD_SET(_sockfd, &_currentSockets);
 
@@ -115,7 +111,7 @@ void ServerIRC::Run() {
     timeout.tv_sec = 0;
     timeout.tv_usec = 0;
 
-    while (keepRunning) {
+    while (keepRunning && _running) {
         _readySockets = _currentSockets;
         if (select(FD_SETSIZE, &_readySockets, NULL, NULL, &timeout) < 0) {
             perror("select");
@@ -125,17 +121,17 @@ void ServerIRC::Run() {
         for (int i = 0; i < FD_SETSIZE; i++) {
             if (FD_ISSET(i, &_readySockets)) {
                 if (i == _sockfd) {
-                    ClientIRC *test = this->CreateClient();
+                    CreateClient();
                 } else {
                     FD_CLR(i, &_currentSockets);
 
-                    std::cout << "Client disconnected" << std::endl;
-                    //delete client who leave
-                    /*for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-                        if ((*it) && !(*it)->GetKilled() && (*it)->GetFd() == i) {
-                            RemoveClient((*it));
+                    std::cout << "Client disconnected without a QUIT" << std::endl;
+                    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+                        if (!(*it)->GetKilled() && (*it)->GetFd() == i) {
+                            _commandManager->Quit((*it), std::vector<std::string>());
+                            break;
                         }
-                    }*/
+                    }
                 }
             }
         }
@@ -156,9 +152,6 @@ void ServerIRC::Run() {
             } else if (clientBuffer[clientBuffer.size() - 1] == '\n') {
                 (*it)->SetBuffer("");
                 MesssageReceived((*it), clientBuffer);
-                if ((*it)->GetKilled()) {
-                    break;
-                }
             }
             buffer[0] = '\0';
         }
@@ -168,9 +161,11 @@ void ServerIRC::Run() {
 void ServerIRC::Close() {
     close(_sockfd);
     for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-        close((*it)->GetFd());
-        delete *it;
+        if (!(*it)->GetKilled()) {
+            RemoveClient((*it));
+        }
     }
+    _running = false;
 }
 
 void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {

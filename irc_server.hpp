@@ -31,6 +31,7 @@ class ServerIRC {
     private:
         int _port;
         int _sockfd;
+        bool _running;
         fd_set _currentSockets;
         std::string _password;
         fd_set _readySockets;

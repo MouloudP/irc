@@ -44,7 +44,7 @@ void ChannelIRC::AddClient(ClientIRC *client) {
     nameList = nameList.substr(0, nameList.size() - 1);
 
     std::cout << client->GetNick() << " JOIN " << _name << std::endl;
-    this->SendMessage(":" + client->GetNick() + "!user@host " + " JOIN " + _name + "\r\n", client);\
+    this->SendMessage(":" + client->GetNick() + "!user@host JOIN " + _name + "\r\n", NULL);
     client->SendMessage(":mouloud 353 " + client->GetNick() + " = " + _name + " :" + nameList + "\r\n");
     client->SendMessage(":mouloud 366 " + client->GetNick() + " " + _name + " :End of /NAMES list.\r\n");
 
@@ -73,7 +73,7 @@ void ChannelIRC::RemoveClient(ClientIRC *client) {
 
 bool ChannelIRC::HasClient(ClientIRC *client) {
     for (std::vector<ClientIRC *>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-        if (*it == client && !client->GetKilled()) {
+        if (!client->GetKilled() && *it == client) {
             return true;
         }
     }
@@ -82,7 +82,7 @@ bool ChannelIRC::HasClient(ClientIRC *client) {
 
 void ChannelIRC::SendMessage(std::string message, ClientIRC *client) {
     for (std::vector<ClientIRC *>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-        if (*it == client) continue;
+        if ((*it)->GetKilled() || *it == client) continue;
         (*it)->SendMessage(message);
     }
 }
