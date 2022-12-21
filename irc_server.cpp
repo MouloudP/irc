@@ -38,7 +38,7 @@ ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s), _runni
 ServerIRC::~ServerIRC() {
     close(_sockfd);
 
-    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+    for (iterator it = _clients.begin(); it != _clients.end(); ++it) {
         delete (*it);
     }
 
@@ -61,7 +61,7 @@ std::vector<ClientIRC *> ServerIRC::getClients() {
 }
 
 ClientIRC *ServerIRC::GetClientByNick(std::string nick) {
-    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+    for (iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (!(*it)->GetKilled() && (*it)->GetNick() == nick)
             return (*it);
     }
@@ -93,7 +93,7 @@ ClientIRC *ServerIRC::CreateClient() {
 }
 
 void ServerIRC::RemoveClient(ClientIRC *client) {
-    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+    for (iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (!(*it)->GetKilled() && (*it)->GetFd() == client->GetFd()) {
             int fd = client->GetFd();
             close(fd);
@@ -128,7 +128,7 @@ void ServerIRC::Run() {
             }
         }
 
-        for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+        for (iterator it = _clients.begin(); it != _clients.end(); ++it) {
             if ((*it)->GetKilled()) {
                 continue;
             }
@@ -158,7 +158,7 @@ void ServerIRC::Run() {
 
 void ServerIRC::Close() {
     close(_sockfd);
-    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
+    for (iterator it = _clients.begin(); it != _clients.end(); ++it) {
         if (!(*it)->GetKilled()) {
             RemoveClient((*it));
         }
@@ -168,7 +168,7 @@ void ServerIRC::Close() {
 
 void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {
     std::vector<std::string> messages = splitString(message, "\n");
-    for (auto it = messages.begin(); it != messages.end(); ++it) {
+    for (std::vector<std::string>::iterator it = messages.begin(); it != messages.end(); ++it) {
         this->_commandManager->ExecuteCommand(client, *it);
         if (client->GetKilled()) {
             break;

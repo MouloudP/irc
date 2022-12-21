@@ -165,7 +165,7 @@ void CommandManager::Join(ClientIRC *client, std::vector<std::string> args) {
     }
 
     std::vector<std::string> channels = splitString(args[1], ",");
-    for (auto it = channels.begin(); it != channels.end(); ++it) {
+    for (iterator it = channels.begin(); it != channels.end(); ++it) {
         ChannelIRC *channel = this->_channelManager->GetChannel((*it));
         if (channel) {
             if (channel->GetMaxClients() != 0 && channel->GetClients().size() >= channel->GetMaxClients()) {
@@ -186,7 +186,7 @@ void CommandManager::Part(ClientIRC *client, std::vector<std::string> args) {
     }
 
     std::vector<std::string> channels = splitString(args[1], ",");
-    for (auto it = channels.begin(); it != channels.end(); ++it) {
+    for (iterator it = channels.begin(); it != channels.end(); ++it) {
         ChannelIRC *channel = this->_channelManager->GetChannel(*it);
         if (!channel) {
             std::cout << "Channel " << *it << " not found" << std::endl;
@@ -240,7 +240,7 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
     {
         std::stringstream ss;
         std::string count;
-        for (auto it = chan.begin();it != chan.end();it++)
+        for (std::map<std::string, ChannelIRC *>::iterator it = chan.begin();it != chan.end();it++)
         {
             ChannelIRC *channel = this->_channelManager->GetChannel(it->first);
             if (!channel) continue;
@@ -253,11 +253,11 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
     }
     else
     {
-        for (auto ite = args.begin();ite != args.end();ite++)
+        for (iterator ite = args.begin();ite != args.end();ite++)
         {
             std::stringstream ss;
             std::string count;
-            for (auto it = chan.begin();it != chan.end();it++)
+            for (std::map<std::string, ChannelIRC *>::iterator it = chan.begin();it != chan.end();it++)
             {
                 ChannelIRC *channel = this->_channelManager->GetChannel(it->first);
                 if (!channel) continue;
@@ -314,7 +314,7 @@ void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
     std::string pwd = this->_server->getPassword();
 
     std::vector<ClientIRC *> clients = this->_server->getClients();
-    for (auto it = clients.begin(); it != clients.end(); ++it) {
+    for (std::vector<ClientIRC *>::iterator it = clients.begin(); it != clients.end(); ++it) {
         if ((*it)->GetKilled()) continue;
         (*it)->SendMessage(":mouloud 421 " + (*it)->GetNick() + " :Server is restarting\r\n");
     }
@@ -344,7 +344,7 @@ void CommandManager::Quit(ClientIRC *client, std::vector<std::string> args) {
     }
 
     std::map<std::string, ChannelIRC *> channels = _channelManager->GetChannels();
-    for (auto it = channels.begin(); it != channels.end(); ++it) {
+    for (std::map<std::string, ChannelIRC *>::iterator it = channels.begin(); it != channels.end(); ++it) {
         if (it->second && it->second->HasClient(client)) {
             it->second->SendMessage(":" + client->GetNick() + "!user@host QUIT " + reason + "\r\n", client);
             it->second->RemoveClient(client);
@@ -372,11 +372,11 @@ void CommandManager::Mode(ClientIRC *client, std::vector<std::string> args) {
     args[2] = args[2].substr(1);
 
     std::vector<std::string> modes;
-    for (auto it = args[2].begin(); it != args[2].end(); ++it) {
+    for (std::string::iterator it = args[2].begin(); it != args[2].end(); ++it) {
         modes.push_back(std::string(1, *it));
     }
 
-    for (auto it = modes.begin(); it != modes.end(); ++it) {
+     for (iterator it = modes.begin(); it != modes.end(); ++it) {
         if (*it == "l") {
             if (args[3].empty()) {
                 client->SendMessage(":mouloud 461 " + client->GetNick() + " MODE :Not enough parameters\r\n");
