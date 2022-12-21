@@ -124,14 +124,6 @@ void ServerIRC::Run() {
                     CreateClient();
                 } else {
                     FD_CLR(i, &_currentSockets);
-
-                    std::cout << "Client disconnected without a QUIT" << std::endl;
-                    for (auto it = _clients.begin(); it != _clients.end(); ++it) {
-                        if (!(*it)->GetKilled() && (*it)->GetFd() == i) {
-                            _commandManager->Quit((*it), std::vector<std::string>());
-                            break;
-                        }
-                    }
                 }
             }
         }
@@ -140,10 +132,16 @@ void ServerIRC::Run() {
             if ((*it)->GetKilled()) {
                 continue;
             }
+
             char buffer[1024];
             std::string clientBuffer = (*it)->GetBuffer();
 
             int lenght = recv((*it)->GetFd(), buffer, sizeof(buffer), 0);
+            if (!lenght) {
+                std::cout << "Client disconnected without a QUIT" << std::endl;
+                _commandManager->Quit((*it), std::vector<std::string>());
+                continue;
+            }
             if (lenght > 0) {
                 buffer[lenght] = '\0';
                 fflush(stdout);

@@ -32,8 +32,9 @@ class ServerIRC {
         int _port;
         int _sockfd;
         bool _running;
-        fd_set _currentSockets;
         std::string _password;
+        fd_set _currentSockets;
+        fd_set _exceptSockets;
         fd_set _readySockets;
         ChannelManager *_channelManager;
         CommandManager *_commandManager;
