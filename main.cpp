@@ -3,6 +3,7 @@
 bool keepRunning = true;
 
 void signalKill(int sig) {
+    (void) sig;
     std::cout << "TURNING OFF" << std::endl;
     keepRunning = false;
 }

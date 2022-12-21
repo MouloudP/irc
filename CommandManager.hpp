@@ -4,6 +4,7 @@
 # include "irc_server.hpp"
 # include "ClientIRC.hpp"
 # include "ChannelManager.hpp"
+# include "Include.hpp"
 
 class ChannelManager;
 class ClientIRC;

@@ -95,7 +95,7 @@ void ChannelIRC::SetMaxClients(int maxClients) {
     _maxClients = maxClients;
 }
 
-int ChannelIRC::GetMaxClients() {
+unsigned long ChannelIRC::GetMaxClients() {
     return _maxClients;
 }
 
