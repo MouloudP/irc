@@ -54,6 +54,7 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
     } else if (commandName == "USER") {
         this->User(client, args);
     } else if (!client->GetRegistered()) {
+        client->SendMessage(":ircserver 451 :You have not registered\n");
         return;
     } else if (commandName == "PING") {
         this->Ping(client, args);
@@ -82,28 +83,30 @@ void CommandManager::ExecuteCommand(ClientIRC *client, std::string command) {
     } else if (commandName == "CAP") {
 
     } else {
-        client->SendMessage(":mouloud 421 " + commandName +  ":Unknown command\n");
+        client->SendMessage(":ircserver 421 " + commandName +  ":Unknown command\n");
     }
 }
 
 void CommandManager::Pass(ClientIRC *client, std::vector<std::string> args) {
-    if (client->getPassword()) {
-        client->SendMessage(":mouloud 462 :You may not reregister\n");
+    if (_server->getClientSize() > 10) {
+        client->SendMessage(":ircserver 451 :Too many clients connected\r\n");
+        _server->RemoveClient(client);
+    } else if (client->getPassword()) {
+        client->SendMessage(":ircserver 462 :You may not reregister\n");
     } else if (args.size() < 2) {
-        client->SendMessage(":mouloud 461 PASS :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 PASS :Not enough parameters\n");
          _server->RemoveClient(client);
     } else if (args[1] == this->_server->getPassword()) {
         client->setPassword(true);
-        std::cout << "GOOD PASSWORD" << std::endl;
     } else {
-        client->SendMessage(":mouloud 464 :Password incorrect\r\n");
+        client->SendMessage(":ircserver 464 :Password incorrect\r\n");
         _server->RemoveClient(client);
     }
 }   
 
 void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 2) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " NICK :Not enough parameters\r\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " NICK :Not enough parameters\r\n");
         return;
     }
 
@@ -118,10 +121,6 @@ void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
     std::string oldNick = client->GetNick();
     client->SetNick(args[1]);
 
-    std::cout << "_________________________" << std::endl;
-    std::cout << client->GetNick() << std::endl;
-    std::cout << "_________________________" << std::endl;
-
     if (client->GetRegistered()) {
         client->SendMessage(":" + oldNick + "!user@host NICK " + client->GetNick() + "\r\n");;
     }
@@ -129,27 +128,27 @@ void CommandManager::Nick(ClientIRC *client, std::vector<std::string> args) {
 
 void CommandManager::User(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 5) {
-        client->SendMessage(":mouloud 461 USER :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 USER :Not enough parameters\n");
         return;
     }
     if (client->GetRegistered()) {
-        client->SendMessage(":mouloud 462 :You may not reregister\n");
+        client->SendMessage(":ircserver 462 :You may not reregister\n");
         return;
     }
     std::string RealName = concatString(args, 4).erase(0, 1);
     client->SetUserName(args[1]);
     client->SetRealName(RealName);
     if (!client->getPassword()) {
-        client->SendMessage(":mouloud 464 :Bad password\r\n");
+        client->SendMessage(":ircserver 464 :Bad password\r\n");
         _server->RemoveClient(client);
         return;
     } else if (client->GetNick().empty()) {
-        client->SendMessage(":mouloud 431 :No nickname given\r\n");
+        client->SendMessage(":ircserver 431 :No nickname given\r\n");
         _server->RemoveClient(client);
         return;
     }
     client->SetRegistered(true);
-    client->SendMessage(":mouloud 001 " + client->GetNick() + " :Welcome to the Internet Relay Network\n");
+    client->SendMessage(":ircserver 001 " + client->GetNick() + " :Welcome to the Internet Relay Network\n");
 }
 
 void CommandManager::Ping(ClientIRC *client, std::vector<std::string> args) {
@@ -160,7 +159,7 @@ void CommandManager::Ping(ClientIRC *client, std::vector<std::string> args) {
 
 void CommandManager::Join(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 2) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " JOIN :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " JOIN :Not enough parameters\n");
         return;
     }
 
@@ -169,7 +168,7 @@ void CommandManager::Join(ClientIRC *client, std::vector<std::string> args) {
         ChannelIRC *channel = this->_channelManager->GetChannel((*it));
         if (channel) {
             if (channel->GetMaxClients() != 0 && channel->GetClients().size() >= channel->GetMaxClients()) {
-                client->SendMessage(":mouloud 471 ahamdoun " + (*it) + " :Cannot join channel (+l)\r\n");
+                client->SendMessage(":ircserver 471 ahamdoun " + (*it) + " :Cannot join channel (+l)\r\n");
                 continue;
             }
             channel->AddClient(client);
@@ -181,7 +180,7 @@ void CommandManager::Join(ClientIRC *client, std::vector<std::string> args) {
 
 void CommandManager::Part(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 2) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " PART :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " PART :Not enough parameters\n");
         return;
     }
 
@@ -190,7 +189,7 @@ void CommandManager::Part(ClientIRC *client, std::vector<std::string> args) {
         ChannelIRC *channel = this->_channelManager->GetChannel(*it);
         if (!channel) {
             std::cout << "Channel " << *it << " not found" << std::endl;
-            client->SendMessage(":mouloud 403 " + client->GetNick() + " " + *it + " :No such channel\r\n");
+            client->SendMessage(":ircserver 403 " + client->GetNick() + " " + *it + " :No such channel\r\n");
             continue;
         }
 
@@ -199,14 +198,13 @@ void CommandManager::Part(ClientIRC *client, std::vector<std::string> args) {
             reason = concatString(args, 2);
         }
         channel->SendMessage(":" + client->GetNick() + "!user@host PART " + *it + " " + reason + "\r\n", NULL);
-        //client->SendMessage(":" + client->GetNick() + "!user@host KICK " + *it + " " + client->GetNick() +  " " + reason + "\r\n");
         channel->RemoveClient(client);
     }
 }
 
 void CommandManager::PrivMSG(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 3) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " PRIVMSG :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " PRIVMSG :Not enough parameters\n");
         return;
     }
 
@@ -214,16 +212,15 @@ void CommandManager::PrivMSG(ClientIRC *client, std::vector<std::string> args) {
     ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
     ClientIRC *clientT = this->_server->GetClientByNick(args[1]);
     if (!channel && !clientT) {
-        client->SendMessage(":mouloud 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
+        client->SendMessage(":ircserver 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
         return;
     }
     if (channel) {
         if (!channel->HasClient(client)) {
-            client->SendMessage(":mouloud 404 " + client->GetNick() + " " + args[1] + " :You are not in the chanel\r\n");
+            client->SendMessage(":ircserver 404 " + client->GetNick() + " " + args[1] + " :You are not in the chanel\r\n");
             return;
         }
         if (channel->GetCantVoice(client->GetNick())) {
-            //client->SendMessage(":mouloud 404 " + client->GetUserName() + " " + args[1] + " :Cannot send to channel\r\n");
             return;
         }
         std::cout << "Channel " << args[1] << " found send message " << message << std::endl;
@@ -234,7 +231,7 @@ void CommandManager::PrivMSG(ClientIRC *client, std::vector<std::string> args) {
 }
 
 void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
-    client->SendMessage(":mouloud 321 " + client->GetNick() + " :Channel :Users Name\r\n" );
+    client->SendMessage(":ircserver 321 " + client->GetNick() + " :Channel :Users Name\r\n" );
     std::map<std::string, ChannelIRC *> chan = _channelManager->GetChannels();
     if (args.size() < 2)
     {
@@ -247,7 +244,7 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
             ss << channel->getClientsCount();
             ss >> count;
             ss.clear();
-            client->SendMessage(":mouloud 322 " + client->GetNick() + " "  + channel->GetName() + " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
+            client->SendMessage(":ircserver 322 " + client->GetNick() + " "  + channel->GetName() + " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
             std::cout << "CHANNEL |" << it->first << "|" << std::endl;
         }
     }
@@ -269,33 +266,33 @@ void CommandManager::List(ClientIRC *client, std::vector<std::string> args) {
                 name = "#"+name;
                 if (comp == name)
                 {
-                    client->SendMessage(":mouloud 322 " + client->GetNick() + " "  + channel->GetName() +
+                    client->SendMessage(":ircserver 322 " + client->GetNick() + " "  + channel->GetName() +
                     " " + count + ":" +  channel->GetTopic() + "Channel list - A channel\r\n" );
                     std::cout <<  "name == " << comp<< std::endl;
                 }
             }
         }
     }
-    client->SendMessage(":mouloud 323 " + client->GetNick() + " :End of /LIST\r\n");
+    client->SendMessage(":ircserver 323 " + client->GetNick() + " :End of /LIST\r\n");
 }
 
 void CommandManager::Topic(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 3) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " TOPIC :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " TOPIC :Not enough parameters\n");
         return;
     }
 
     ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
     if(!channel) {
-        client->SendMessage(":mouloud 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
+        client->SendMessage(":ircserver 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
         return;
     }
     if (!channel->HasClient(client)) {
-        client->SendMessage(":mouloud 442 " + client->GetNick() + " " + args[1] + " :You're not on that channel\r\n");
+        client->SendMessage(":ircserver 442 " + client->GetNick() + " " + args[1] + " :You're not on that channel\r\n");
         return;
     }
     if (channel->GetOwner() != client) {
-        client->SendMessage(":mouloud 482 " + client->GetNick() + " " + args[1] + " :You're not channel operator\r\n");
+        client->SendMessage(":ircserver 482 " + client->GetNick() + " " + args[1] + " :You're not channel operator\r\n");
         return;
     }
     
@@ -307,7 +304,7 @@ void CommandManager::Topic(ClientIRC *client, std::vector<std::string> args) {
 void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
     (void)args;
     if (!client->GetOperator()) {
-        client->SendMessage(":mouloud 481 " + client->GetNick() + " :Permission Denied- You're not an IRC operator\r\n");
+        client->SendMessage(":ircserver 481 " + client->GetNick() + " :Permission Denied- You're not an IRC operator\r\n");
         return;
     }
     int port = this->_server->getPort();
@@ -316,7 +313,7 @@ void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
     std::vector<ClientIRC *> clients = this->_server->getClients();
     for (std::vector<ClientIRC *>::iterator it = clients.begin(); it != clients.end(); ++it) {
         if ((*it)->GetKilled()) continue;
-        (*it)->SendMessage(":mouloud 421 " + (*it)->GetNick() + " :Server is restarting\r\n");
+        (*it)->SendMessage(":ircserver 421 " + (*it)->GetNick() + " :Server is restarting\r\n");
     }
     
     this->_server->Close();
@@ -325,15 +322,15 @@ void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
 
 void CommandManager::Kill(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 2) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " PRIVMSG :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " PRIVMSG :Not enough parameters\n");
         return;
     }
     ClientIRC *clientToKill = this->_server->GetClientByNick(args[1]);
     if (clientToKill) {
-        clientToKill->SendMessage(":mouloud 421 " + clientToKill->GetNick() + " :You have been killed\r\n");
+        clientToKill->SendMessage(":ircserver 421 " + clientToKill->GetNick() + " :You have been killed\r\n");
         this->_server->RemoveClient(clientToKill);
     } else {
-        client->SendMessage(":mouloud 401 " + client->GetNick() + " " + args[1] + " :No such nick\r\n");
+        client->SendMessage(":ircserver 401 " + client->GetNick() + " " + args[1] + " :No such nick\r\n");
     }
 }
 
@@ -351,20 +348,22 @@ void CommandManager::Quit(ClientIRC *client, std::vector<std::string> args) {
         }
     }
     _server->RemoveClient(client);
+
+    std::cout << "Client disconnected with a QUIT" << std::endl;
 }
 
 void CommandManager::Mode(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 3) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " MODE :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " MODE :Not enough parameters\n");
         return;
     }
     ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
 
     if (!channel) {
-        client->SendMessage(":mouloud 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
+        client->SendMessage(":ircserver 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
         return;
     } else if (channel->GetOwner() != client) {
-        client->SendMessage(":mouloud 482 " + client->GetNick() + " " + args[1] + " :You're not channel operator\r\n");
+        client->SendMessage(":ircserver 482 " + client->GetNick() + " " + args[1] + " :You're not channel operator\r\n");
         return;
     }
 
@@ -379,105 +378,79 @@ void CommandManager::Mode(ClientIRC *client, std::vector<std::string> args) {
      for (iterator it = modes.begin(); it != modes.end(); ++it) {
         if (*it == "l") {
             if (args[3].empty()) {
-                client->SendMessage(":mouloud 461 " + client->GetNick() + " MODE :Not enough parameters\r\n");
+                client->SendMessage(":ircserver 461 " + client->GetNick() + " MODE :Not enough parameters\r\n");
                 return;
             }
-            channel->SetMaxClients(std::stoi(args[3]));
-            //client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " +l " + args[3] + "\r\n");
+            channel->SetMaxClients(atoi(args[3].c_str()));
             channel->SendMessage(":" + client->GetNick() + "!user@host MODE " + channel->GetName() + " +l " + args[3] + "\r\n", NULL);
-        } else if (*it == "b") {
-            if (args[3].empty()) {
-                client->SendMessage(":mouloud 461 " + client->GetNick() + " MODE :Not enough parameters\r\n");
-                return;
-            }
-            channel->SetBanPatern(args[3]);
-            //client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " +b " + args[3] + "\r\n");
-            channel->SendMessage(":" + client->GetNick() + "!user@host MODE " + channel->GetName() + " +b " + args[3] + "\r\n", NULL);
         } else if (*it == "v") {
-            //if (!channel->GetModerated()) {
-                //client->SendMessage(":mouloud 482 " + client->GetNick() + " " + channel->GetName() + " :Channel isn't moderated\r\n");
-                //return;
-            //}
-
             if (args[3].empty()) {
-                client->SendMessage(":mouloud 461 " + client->GetNick() + " MODE :Not enough parameters\r\n");
+                client->SendMessage(":ircserver 461 " + client->GetNick() + " MODE :Not enough parameters\r\n");
                 return;
             }
 
             ClientIRC *clientToVoice = this->_server->GetClientByNick(args[3]);
             if (!clientToVoice) {
-                client->SendMessage(":mouloud 401 " + client->GetNick() + " " + args[3] + " :No such nick\r\n");
+                client->SendMessage(":ircserver 401 " + client->GetNick() + " " + args[3] + " :No such nick\r\n");
                 return;
             }
 
             if (type == "+") {
                 channel->SetCantVoice(clientToVoice->GetNick(), true);
                 channel->SendMessage(":" + client->GetNick() + "!user@host MODE " + channel->GetName() + " +v " + clientToVoice->GetNick() + "\r\n", client);
-                //client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " +v " + clientToVoice->GetNick() + "\r\n");
             } else if (type == "-") {
                 channel->SetCantVoice(clientToVoice->GetNick(), false);
                 channel->SendMessage(":" + client->GetNick() + "!user@host MODE " + channel->GetName() + " -v " + clientToVoice->GetNick() + "\r\n", client);
-                //client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " -v " + clientToVoice->GetNick() + "\r\n");
             }
         } else if (*it == "m") {
             if (type == "+") {
                 channel->SetModerated(true);
-                //client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " +m\r\n");
                 channel->SendMessage(":" + client->GetNick() + "!user@host MODE " + channel->GetName() + " +m\r\n", NULL);
             } else if (type == "-") {
                 channel->SetModerated(false);
-                //client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " -m\r\n");
                 channel->SendMessage(":" + client->GetNick() + "!user@host MODE " + channel->GetName() + " -m\r\n", NULL);
             }
-        } /*else if (*it == "i") {
-            if (type == "+") {
-                channel->SetInviteOnly(true);
-                client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " +i\r\n");
-            } else if (type == "-") {
-                channel->SetInviteOnly(false);
-                client->SendMessage(":mouloud 324 " + client->GetNick() + " " + channel->GetName() + " -i\r\n");
-            }
-        }*/
+        }
     }
 }
 
 void CommandManager::Oper(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 3) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " OPER :Not enough parameters\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " OPER :Not enough parameters\n");
         return;
     }
 
     if (args[1] == "admin" && args[2] == "1233") {
         client->SetOperator(true);
-        client->SendMessage(":mouloud 381 " + client->GetNick() + " :You are now an IRC operator\r\n");
+        client->SendMessage(":ircserver 381 " + client->GetNick() + " :You are now an IRC operator\r\n");
     } else {
-        client->SendMessage(":mouloud 464 " + client->GetNick() + " :Password incorrect\r\n");
+        client->SendMessage(":ircserver 464 " + client->GetNick() + " :Password incorrect\r\n");
     }
 }
 
 void CommandManager::Kick(ClientIRC *client, std::vector<std::string> args) {
     if (args.size() < 3) {
-        client->SendMessage(":mouloud 461 " + client->GetNick() + " KICK :Not enough parameters\r\n");
+        client->SendMessage(":ircserver 461 " + client->GetNick() + " KICK :Not enough parameters\r\n");
         return;
     }
     ChannelIRC *channel = this->_channelManager->GetChannel(args[1]);
     if (!channel) {
-        client->SendMessage(":mouloud 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
+        client->SendMessage(":ircserver 403 " + client->GetNick() + " " + args[1] + " :No such channel\r\n");
         return;
     }
 
     if (channel->GetOwner() != client) {
-        client->SendMessage(":mouloud 482 " + client->GetNick() + " " + args[1] + " :You're not channel operator\r\n");
+        client->SendMessage(":ircserver 482 " + client->GetNick() + " " + args[1] + " :You're not channel operator\r\n");
         return;
     }
 
     ClientIRC *clientToKick = this->_server->GetClientByNick(args[2]);
     if (!clientToKick) {
-        client->SendMessage(":mouloud 401 " + client->GetNick() + " " + args[2] + " :No such nick\r\n");
+        client->SendMessage(":ircserver 401 " + client->GetNick() + " " + args[2] + " :No such nick\r\n");
         return;
     }
     if (!channel->HasClient(clientToKick)) {
-        client->SendMessage(":mouloud 441 " + client->GetNick() + " " + clientToKick->GetNick() + " " + channel->GetName() + " :They aren't on that channel\r\n");
+        client->SendMessage(":ircserver 441 " + client->GetNick() + " " + clientToKick->GetNick() + " " + channel->GetName() + " :They aren't on that channel\r\n");
         return;
     }
 

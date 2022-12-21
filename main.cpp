@@ -1,10 +1,10 @@
-#include "irc_server.hpp"
+#include "ServerIRC.hpp"
 
 bool keepRunning = true;
 
 void signalKill(int sig) {
     (void) sig;
-    std::cout << "TURNING OFF" << std::endl;
+    std::cout << "GOOD BYE" << std::endl;
     keepRunning = false;
 }
 

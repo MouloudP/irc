@@ -1,7 +1,6 @@
 #ifndef IRC_SERVER_HPP
 # define IRC_SERVER_HPP
 
-# include "Include.hpp"
 # include "ClientIRC.hpp"
 # include "ChannelIRC.hpp"
 # include "ChannelManager.hpp"
@@ -28,6 +27,7 @@ class ServerIRC {
         void ExecuteCommand(ClientIRC *, std::string);
         ClientIRC *CreateClient();
         std::vector<ClientIRC *> getClients();
+        int getClientSize();
         ClientIRC *GetClientByNick(std::string);
         void RemoveClient(ClientIRC *);
     

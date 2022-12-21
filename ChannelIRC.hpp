@@ -31,9 +31,6 @@ class ChannelIRC {
         void SetMaxClients(int);
         unsigned long GetMaxClients();
 
-        void SetBanPatern(std::string);
-        std::string GetBanPatern();
-
         void SetModerated(bool);
         bool GetModerated();
 
@@ -50,7 +47,6 @@ class ChannelIRC {
         std::vector<ClientIRC *> _clients;
         ChannelManager *_channelManager;
         unsigned long _maxClients;
-        std::string _banPatern;
         bool _moderated;
         std::map<std::string, bool> _cantVoice;
         ClientIRC *_owner;

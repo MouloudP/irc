@@ -1,9 +1,9 @@
-#include "irc_server.hpp"
+#include "ServerIRC.hpp"
 
 ServerIRC::ServerIRC() {
 }
 
-ServerIRC::ServerIRC(int port, std::string s): _port(port), _password(s), _running(true) {
+ServerIRC::ServerIRC(int port, std::string s): _port(port), _running(true), _password(s) {
     std::cout << "ServerIRC::ServerIRC(int)" << std::endl;
 
     _sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -71,7 +71,6 @@ ClientIRC *ServerIRC::GetClientByNick(std::string nick) {
 ClientIRC *ServerIRC::CreateClient() {
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
-    std::cout << _sockfd << std::endl;
     int clientfd = accept(_sockfd, (struct sockaddr *)&client, &client_len);
 
     if (clientfd == -1) {
@@ -84,7 +83,7 @@ ClientIRC *ServerIRC::CreateClient() {
     ClientIRC *client_irc = new ClientIRC(clientfd);
     _clients.push_back(client_irc);
 
-    std::cout << "[" << client_irc->GetFd() << "]" << "Client connected" << std::endl;
+    std::cout << "[" << client_irc->GetFd() << "] " << "Client connected" << std::endl;
     if (fcntl(client_irc->GetFd(), F_SETFL, fcntl(client_irc->GetFd(), F_GETFL) | O_NONBLOCK) < 0) {
         perror("fcntl");
         exit(1);
@@ -174,4 +173,14 @@ void ServerIRC::MesssageReceived(ClientIRC *client, std::string message) {
             break;
         } 
     }
+}
+
+int ServerIRC::getClientSize() {
+    int size = 0;
+    for (iterator it = _clients.begin(); it != _clients.end(); ++it) {
+        if (!(*it)->GetKilled()) {
+            size++;
+        }
+    }
+    return size;
 }

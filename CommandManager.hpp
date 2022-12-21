@@ -1,7 +1,7 @@
 #ifndef IRC_COMMAND_HPP
 # define IRC_COMMAND_HPP
 
-# include "irc_server.hpp"
+# include "ServerIRC.hpp"
 # include "ClientIRC.hpp"
 # include "ChannelManager.hpp"
 # include "Include.hpp"

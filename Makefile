@@ -1,5 +1,5 @@
 SRC = main.cpp ChannelIRC.cpp ChannelManager.cpp ClientIRC.cpp \
-      CommandManager.cpp irc_server.cpp
+      CommandManager.cpp ServerIRC.cpp
 CC = c++
 
 OBJ = $(SRC:%.cpp=./.build/%.o)

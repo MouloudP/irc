@@ -1,13 +1,10 @@
 #include "ClientIRC.hpp"
 
 ClientIRC::ClientIRC(int fd): _fd(fd), _mdp(false), _registered(false), _operator(false),_killed(false), _buffer("") {
-    std::cout << "ClientIRC::ClientIRC(int)" << std::endl;
 }
 
 ClientIRC::~ClientIRC() {
     close(_fd);
-
-    std::cout << "ClientIRC::~ClientIRC()" << std::endl;
 }
 
 int ClientIRC::GetFd() {

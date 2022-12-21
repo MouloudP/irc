@@ -1,6 +1,6 @@
 #ifndef CHANNEL_MANAGER_HPP
 # define CHANNEL_MANAGER_HPP
-# include "irc_server.hpp"
+# include "ServerIRC.hpp"
 # include "ChannelIRC.hpp"
 
 class ChannelIRC;
