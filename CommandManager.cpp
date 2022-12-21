@@ -20,7 +20,7 @@ std::vector<std::string> splitString(std::string str, std::string delimiter) {
 
 std::string concatString(std::vector<std::string> str, int start) {
     std::string result = "";
-    for (int i = start; i < str.size(); i++) {
+    for (unsigned long i = start; i < str.size(); i++) {
         result += str[i];
         if (i != str.size() - 1) {
             result += " ";
@@ -304,6 +304,7 @@ void CommandManager::Topic(ClientIRC *client, std::vector<std::string> args) {
 }
 
 void CommandManager::Restart(ClientIRC *client, std::vector<std::string> args) {
+    (void)args;
     if (!client->GetOperator()) {
         client->SendMessage(":mouloud 481 " + client->GetNick() + " :Permission Denied- You're not an IRC operator\r\n");
         return;
